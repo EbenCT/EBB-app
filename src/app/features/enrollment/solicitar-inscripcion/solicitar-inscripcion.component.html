@@ -1,0 +1,77 @@
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-success">
+  <div class="container-fluid">
+    <button class="btn btn-outline-light me-2" (click)="goBack()">
+      <i class="fas fa-arrow-left"></i> Volver
+    </button>
+    <span class="navbar-brand mb-0 h1">
+      <i class="fas fa-graduation-cap"></i> Solicitar inscripción
+    </span>
+    <button class="btn btn-outline-light" (click)="logout()">
+      <i class="fas fa-sign-out-alt"></i> Salir
+    </button>
+  </div>
+</nav>
+
+<div class="container mt-5">
+  <div class="card shadow">
+    <div class="card-header bg-primary text-white">
+      <h4 class="mb-0"><i class="fas fa-clipboard-list"></i> Solicitar inscripción a un curso</h4>
+    </div>
+    <div class="card-body">
+      <!-- Dropdown de cursos -->
+      <div class="mb-4">
+        <label class="form-label fw-bold">Selecciona el curso *</label>
+        <select
+          class="form-select form-select-lg"
+          [(ngModel)]="cursoIdSeleccionado"
+          (change)="onCursoChange()"
+          [disabled]="loading">
+          <option value="">-- Selecciona un curso --</option>
+          <option *ngFor="let curso of cursos" [value]="curso.id">
+            {{ curso.titulo }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Imagen y descripción del curso seleccionado -->
+      <div *ngIf="cursoSeleccionado" class="curso-info animate-fade-in">
+        <!-- Imagen -->
+        <div class="text-center mb-4">
+          <img
+            [src]="cursoSeleccionado.imagen || 'assets/img/default-course.png'"
+            [alt]="cursoSeleccionado.titulo"
+            class="img-fluid rounded shadow-sm curso-imagen">
+        </div>
+
+        <!-- Nombre del curso -->
+        <h3 class="text-center text-primary mb-3">{{ cursoSeleccionado.titulo }}</h3>
+
+        <!-- Descripción -->
+        <div class="descripcion-box">
+          <h5><i class="fas fa-info-circle"></i> Descripción del curso</h5>
+          <p class="text-muted">
+            {{ cursoSeleccionado.descripcion || 'Sin descripción disponible' }}
+          </p>
+        </div>
+
+        <!-- Botón de solicitud -->
+        <button
+          (click)="enviarSolicitud()"
+          class="btn btn-success btn-lg w-100 mt-4"
+          [disabled]="loading">
+          <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+          <i *ngIf="!loading" class="fas fa-paper-plane me-2"></i>
+          {{ loading ? 'Enviando solicitud...' : 'Solicitar inscripción' }}
+        </button>
+      </div>
+
+      <!-- Mensaje cuando no hay curso seleccionado -->
+      <div *ngIf="!cursoSeleccionado" class="text-center text-muted py-5 placeholder-content">
+        <i class="fas fa-arrow-up fa-3x mb-3 text-secondary"></i>
+        <h5>Selecciona un curso para ver los detalles</h5>
+        <p>Podrás ver la imagen y descripción del curso antes de solicitar tu inscripción</p>
+      </div>
+    </div>
+  </div>
+</div>

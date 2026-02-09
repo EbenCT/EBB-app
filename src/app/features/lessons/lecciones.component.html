@@ -1,0 +1,481 @@
+<div class="lecciones-container">
+  <!-- Header -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" style="cursor: pointer;" (click)="goToDashboard()">
+        <img src="assets/img/logo.svg" alt="Logo" height="40">
+      </a>
+      <div class="d-flex align-items-center">
+        <button class="btn btn-outline-light btn-sm me-2" (click)="goBack()">
+          <i class="fas fa-arrow-left"></i> Volver
+        </button>
+        <button class="btn btn-outline-light btn-sm" (click)="logout()">
+          <i class="fas fa-sign-out-alt"></i> Salir
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="container-fluid py-4">
+    <!-- Título -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <h2><i class="fas fa-book-open"></i> Lecciones de la Sección</h2>
+        <p class="text-muted" *ngIf="seccion">{{ seccion.titulo }}</p>
+      </div>
+    </div>
+
+    <!-- Botón crear -->
+    <div class="row mb-4">
+      <div class="col-12 text-end">
+        <button class="btn btn-primary" (click)="openCreateModal()">
+          <i class="fas fa-plus"></i> Nueva Lección
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Cargando...</span>
+      </div>
+      <p class="mt-2">Cargando lecciones...</p>
+    </div>
+
+    <!-- Lista de Lecciones -->
+    <div *ngIf="!loading" class="row">
+      <div class="col-12">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Orden</th>
+                    <th>Título</th>
+                    <th>Tipo</th>
+                    <th>Contenido/URL</th>
+                    <th class="text-center">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let leccion of lecciones">
+                    <td><span class="badge bg-secondary">{{ leccion.orden + 1 }}</span></td>
+                    <td><strong>{{ leccion.titulo }}</strong></td>
+                    <td>
+                      <span class="badge" [ngClass]="getTipoBadgeClass(leccion.tipo)">
+                        <i class="fas" [ngClass]="getTipoIcon(leccion.tipo)"></i>
+                        {{ leccion.tipo }}
+                      </span>
+                    </td>
+                    <td>
+                      <span *ngIf="leccion.tipo === 'texto'" class="text-muted text-truncate" style="max-width: 300px; display: inline-block;">
+                        {{ leccion.contenido }}
+                      </span>
+                      <a *ngIf="leccion.tipo === 'imagen' || leccion.tipo === 'pdf'"
+                         [href]="leccion.urlArchivo"
+                         target="_blank"
+                         class="text-primary">
+                        <i class="fas fa-external-link-alt"></i> Ver archivo
+                      </a>
+                      <a *ngIf="leccion.tipo === 'video'"
+                         [href]="leccion.urlYoutube"
+                         target="_blank"
+                         class="text-danger">
+                        <i class="fab fa-youtube"></i> Ver video
+                      </a>
+                    </td>
+                    <td class="text-center">
+                      <div class="btn-group" role="group">
+                        <button
+                          class="btn btn-sm btn-outline-success"
+                          (click)="goToTasks(leccion.id)"
+                          title="Gestionar tareas">
+                          <i class="fas fa-tasks"></i>
+                        </button>
+                        <button
+                          class="btn btn-sm btn-outline-info"
+                          (click)="viewLesson(leccion)"
+                          title="Ver lección">
+                          <i class="fas fa-eye"></i>
+                        </button>
+                        <button
+                          class="btn btn-sm btn-outline-primary"
+                          (click)="editLesson(leccion)"
+                          title="Editar">
+                          <i class="fas fa-edit"></i>
+                        </button>
+                        <button
+                          class="btn btn-sm btn-outline-danger"
+                          (click)="deleteLesson(leccion)"
+                          title="Eliminar">
+                          <i class="fas fa-trash"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr *ngIf="lecciones.length === 0">
+                    <td colspan="5" class="text-center text-muted py-4">
+                      <i class="fas fa-book-open fa-3x mb-3"></i>
+                      <p>No hay lecciones creadas aún</p>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Crear Lección -->
+<div class="modal fade" [class.show]="showCreateModal" [style.display]="showCreateModal ? 'block' : 'none'" *ngIf="showCreateModal">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Crear Nueva Lección</h5>
+        <button type="button" class="btn-close" (click)="closeCreateModal()"></button>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="mb-3">
+            <label class="form-label">Título *</label>
+            <input type="text" class="form-control" [(ngModel)]="newLesson.titulo" name="titulo" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Tipo de Lección *</label>
+            <select class="form-select" [(ngModel)]="newLesson.tipo" name="tipo">
+              <option value="texto">Texto</option>
+              <option value="imagen">Imagen</option>
+              <option value="pdf">PDF</option>
+              <option value="video">Video (YouTube)</option>
+            </select>
+          </div>
+
+          <!-- Contenido para tipo texto con Markdown -->
+          <div class="mb-3" *ngIf="newLesson.tipo === 'texto'">
+            <label class="form-label">Contenido
+              <small class="text-muted ms-2">Soporta Markdown: **negrita**, *cursiva*, __subrayado__, # Títulos, - Listas</small>
+            </label>
+
+            <!-- Barra de herramientas Markdown -->
+            <div class="markdown-toolbar btn-group mb-2" role="group">
+              <button type="button" class="btn btn-sm btn-outline-secondary" (click)="insertMarkdown('**', '**', 'Texto en negrita')" title="Negrita">
+                <i class="fas fa-bold"></i>
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" (click)="insertMarkdown('*', '*', 'Texto en cursiva')" title="Cursiva">
+                <i class="fas fa-italic"></i>
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" (click)="insertMarkdown('__', '__', 'Texto subrayado')" title="Subrayado">
+                <i class="fas fa-underline"></i>
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" (click)="insertMarkdown('# ', '', 'Título')" title="Título">
+                <i class="fas fa-heading"></i>
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" (click)="insertMarkdown('- ', '', 'Elemento de lista')" title="Lista">
+                <i class="fas fa-list-ul"></i>
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" (click)="insertMarkdown('[', '](url)', 'texto del enlace')" title="Enlace">
+                <i class="fas fa-link"></i>
+              </button>
+            </div>
+
+            <textarea
+              #markdownTextarea
+              class="form-control markdown-editor"
+              [(ngModel)]="newLesson.contenido"
+              name="contenido"
+              rows="10"
+              placeholder="Escribe aquí el contenido de la lección usando Markdown..."></textarea>
+
+            <!-- Vista previa -->
+            <div class="mt-2">
+              <button type="button" class="btn btn-sm btn-outline-info" (click)="togglePreview()">
+                <i class="fas" [class.fa-eye]="!showPreview" [class.fa-eye-slash]="showPreview"></i>
+                {{ showPreview ? 'Ocultar' : 'Ver' }} Vista Previa
+              </button>
+            </div>
+            <div *ngIf="showPreview" class="markdown-preview card mt-2 p-3" [innerHTML]="getMarkdownPreview(newLesson.contenido)"></div>
+          </div>
+
+          <!-- Subida de imagen -->
+          <div class="mb-3" *ngIf="newLesson.tipo === 'imagen'">
+            <label class="form-label">Imagen</label>
+            <input type="file" class="form-control" accept="image/*" (change)="onFileSelected($event, false)">
+            <div class="mt-2" *ngIf="uploadingFile">
+              <div class="progress">
+                <div class="progress-bar" [style.width.%]="fileProgress"></div>
+              </div>
+            </div>
+            <div class="mt-2" *ngIf="newLesson.urlArchivo">
+              <img [src]="newLesson.urlArchivo" class="img-thumbnail" style="max-height: 200px;">
+            </div>
+          </div>
+
+          <!-- Subida de PDF -->
+          <div class="mb-3" *ngIf="newLesson.tipo === 'pdf'">
+            <label class="form-label">URL del PDF</label>
+            <input type="url" class="form-control" [(ngModel)]="newLesson.urlArchivo" name="urlPdf" placeholder="https://ejemplo.com/documento.pdf">
+            <small class="text-muted">Ingresa la URL pública de un PDF. Puedes usar Google Drive, Dropbox o cualquier enlace directo.</small>
+            <div class="mt-2" *ngIf="newLesson.urlArchivo">
+              <a [href]="newLesson.urlArchivo" target="_blank" class="btn btn-sm btn-outline-primary">
+                <i class="fas fa-file-pdf"></i> Ver PDF
+              </a>
+            </div>
+          </div>
+
+          <!-- URL de YouTube -->
+          <div class="mb-3" *ngIf="newLesson.tipo === 'video'">
+            <label class="form-label">URL de YouTube</label>
+            <input type="url" class="form-control" [(ngModel)]="newLesson.urlYoutube" name="urlYoutube" placeholder="https://www.youtube.com/watch?v=...">
+            <small class="text-muted">Ingresa la URL completa del video de YouTube</small>
+          </div>
+
+          <!-- Pregunta de Retroalimentación (Opcional) -->
+          <div class="border-top pt-3 mt-4">
+            <h6 class="mb-3">
+              <i class="fas fa-question-circle text-primary"></i>
+              Pregunta de Retroalimentación (Opcional)
+            </h6>
+            <p class="text-muted small mb-3">
+              Agrega una pregunta de 2 opciones que el estudiante deberá responder correctamente antes de completar la lección.
+            </p>
+
+            <div class="mb-3">
+              <label class="form-label">Pregunta</label>
+              <textarea
+                class="form-control"
+                [(ngModel)]="newLesson.preguntaTexto"
+                name="preguntaTexto"
+                rows="2"
+                placeholder="Ej: ¿Cuál es el mensaje principal de esta lección?"></textarea>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">
+                  <i class="fas fa-check-circle text-success"></i> Opción Correcta
+                </label>
+                <input
+                  type="text"
+                  class="form-control"
+                  [(ngModel)]="newLesson.opcionCorrecta"
+                  name="opcionCorrecta"
+                  placeholder="Respuesta correcta">
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">
+                  <i class="fas fa-times-circle text-danger"></i> Opción Incorrecta
+                </label>
+                <input
+                  type="text"
+                  class="form-control"
+                  [(ngModel)]="newLesson.opcionIncorrecta"
+                  name="opcionIncorrecta"
+                  placeholder="Respuesta incorrecta">
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeCreateModal()">Cancelar</button>
+        <button type="button" class="btn btn-primary" (click)="createLesson()">Crear Lección</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade" [class.show]="showCreateModal" *ngIf="showCreateModal"></div>
+
+<!-- Modal de Editar Lección -->
+<div class="modal fade" [class.show]="showEditModal" [style.display]="showEditModal ? 'block' : 'none'" *ngIf="showEditModal">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Editar Lección</h5>
+        <button type="button" class="btn-close" (click)="closeEditModal()"></button>
+      </div>
+      <div class="modal-body" *ngIf="selectedLesson">
+        <form>
+          <div class="mb-3">
+            <label class="form-label">Título</label>
+            <input type="text" class="form-control" [(ngModel)]="selectedLesson.titulo" name="titulo">
+          </div>
+
+          <!-- Contenido para tipo texto con Markdown -->
+          <div class="mb-3" *ngIf="selectedLesson.tipo === 'texto'">
+            <label class="form-label">Contenido
+              <small class="text-muted ms-2">Soporta Markdown: **negrita**, *cursiva*, __subrayado__, # Títulos, - Listas</small>
+            </label>
+
+            <!-- Barra de herramientas Markdown -->
+            <div class="markdown-toolbar btn-group mb-2" role="group">
+              <button type="button" class="btn btn-sm btn-outline-secondary" (click)="insertMarkdownEdit('**', '**', 'Texto en negrita')" title="Negrita">
+                <i class="fas fa-bold"></i>
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" (click)="insertMarkdownEdit('*', '*', 'Texto en cursiva')" title="Cursiva">
+                <i class="fas fa-italic"></i>
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" (click)="insertMarkdownEdit('__', '__', 'Texto subrayado')" title="Subrayado">
+                <i class="fas fa-underline"></i>
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" (click)="insertMarkdownEdit('# ', '', 'Título')" title="Título">
+                <i class="fas fa-heading"></i>
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" (click)="insertMarkdownEdit('- ', '', 'Elemento de lista')" title="Lista">
+                <i class="fas fa-list-ul"></i>
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" (click)="insertMarkdownEdit('[', '](url)', 'texto del enlace')" title="Enlace">
+                <i class="fas fa-link"></i>
+              </button>
+            </div>
+
+            <textarea
+              #markdownTextareaEdit
+              class="form-control markdown-editor"
+              [(ngModel)]="selectedLesson.contenido"
+              name="contenido"
+              rows="10"
+              placeholder="Escribe aquí el contenido de la lección usando Markdown..."></textarea>
+
+            <!-- Vista previa -->
+            <div class="mt-2">
+              <button type="button" class="btn btn-sm btn-outline-info" (click)="togglePreviewEdit()">
+                <i class="fas" [class.fa-eye]="!showPreviewEdit" [class.fa-eye-slash]="showPreviewEdit"></i>
+                {{ showPreviewEdit ? 'Ocultar' : 'Ver' }} Vista Previa
+              </button>
+            </div>
+            <div *ngIf="showPreviewEdit" class="markdown-preview card mt-2 p-3" [innerHTML]="getMarkdownPreview(selectedLesson.contenido)"></div>
+          </div>
+
+          <!-- Subida de imagen -->
+          <div class="mb-3" *ngIf="selectedLesson.tipo === 'imagen'">
+            <label class="form-label">Imagen</label>
+            <input type="file" class="form-control" accept="image/*" (change)="onFileSelected($event, true)">
+            <div class="mt-2" *ngIf="uploadingFile">
+              <div class="progress">
+                <div class="progress-bar" [style.width.%]="fileProgress"></div>
+              </div>
+            </div>
+            <div class="mt-2" *ngIf="selectedLesson.urlArchivo">
+              <img [src]="selectedLesson.urlArchivo" class="img-thumbnail" style="max-height: 200px;">
+            </div>
+          </div>
+
+          <!-- Subida de PDF -->
+          <div class="mb-3" *ngIf="selectedLesson.tipo === 'pdf'">
+            <label class="form-label">URL del PDF</label>
+            <input type="url" class="form-control" [(ngModel)]="selectedLesson.urlArchivo" name="urlPdfEdit" placeholder="https://ejemplo.com/documento.pdf">
+            <small class="text-muted">Ingresa la URL pública de un PDF.</small>
+            <div class="mt-2" *ngIf="selectedLesson.urlArchivo">
+              <a [href]="selectedLesson.urlArchivo" target="_blank" class="btn btn-sm btn-outline-primary">
+                <i class="fas fa-file-pdf"></i> Ver PDF
+              </a>
+            </div>
+          </div>
+
+          <!-- URL de YouTube -->
+          <div class="mb-3" *ngIf="selectedLesson.tipo === 'video'">
+            <label class="form-label">URL de YouTube</label>
+            <input type="url" class="form-control" [(ngModel)]="selectedLesson.urlYoutube" name="urlYoutube">
+          </div>
+
+          <!-- Pregunta de Retroalimentación (Opcional) -->
+          <div class="border-top pt-3 mt-4">
+            <h6 class="mb-3">
+              <i class="fas fa-question-circle text-primary"></i>
+              Pregunta de Retroalimentación (Opcional)
+            </h6>
+            <p class="text-muted small mb-3">
+              Agrega una pregunta de 2 opciones que el estudiante deberá responder correctamente antes de completar la lección.
+            </p>
+
+            <div class="mb-3">
+              <label class="form-label">Pregunta</label>
+              <textarea
+                class="form-control"
+                [(ngModel)]="selectedLesson.preguntaRetroalimentacion!.texto"
+                name="preguntaTextoEdit"
+                rows="2"
+                placeholder="Ej: ¿Cuál es el mensaje principal de esta lección?"></textarea>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">
+                  <i class="fas fa-check-circle text-success"></i> Opción Correcta
+                </label>
+                <input
+                  type="text"
+                  class="form-control"
+                  [(ngModel)]="selectedLesson.preguntaRetroalimentacion!.opcionCorrecta"
+                  name="opcionCorrectaEdit"
+                  placeholder="Respuesta correcta">
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">
+                  <i class="fas fa-times-circle text-danger"></i> Opción Incorrecta
+                </label>
+                <input
+                  type="text"
+                  class="form-control"
+                  [(ngModel)]="selectedLesson.preguntaRetroalimentacion!.opcionIncorrecta"
+                  name="opcionIncorrectaEdit"
+                  placeholder="Respuesta incorrecta">
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeEditModal()">Cancelar</button>
+        <button type="button" class="btn btn-primary" (click)="saveLesson()">Guardar Cambios</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade" [class.show]="showEditModal" *ngIf="showEditModal"></div>
+
+<!-- Modal de Ver Lección -->
+<div class="modal fade" [class.show]="showViewModal" [style.display]="showViewModal ? 'block' : 'none'" *ngIf="showViewModal">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">{{ selectedLesson?.titulo }}</h5>
+        <button type="button" class="btn-close" (click)="closeViewModal()"></button>
+      </div>
+      <div class="modal-body" *ngIf="selectedLesson">
+        <!-- Vista de texto (renderizado Markdown) -->
+        <div *ngIf="selectedLesson.tipo === 'texto'" class="lesson-content markdown-content" [innerHTML]="getMarkdownPreview(selectedLesson.contenido)"></div>
+
+        <!-- Vista de imagen -->
+        <div *ngIf="selectedLesson.tipo === 'imagen'" class="text-center">
+          <img [src]="selectedLesson.urlArchivo" class="img-fluid" alt="{{ selectedLesson.titulo }}">
+        </div>
+
+        <!-- Vista de PDF -->
+        <div *ngIf="selectedLesson.tipo === 'pdf'" class="text-center">
+          <iframe [src]="getSafePdfUrl(selectedLesson.urlArchivo!)" width="100%" height="600px" frameborder="0"></iframe>
+        </div>
+
+        <!-- Vista de video -->
+        <div *ngIf="selectedLesson.tipo === 'video' && selectedLesson.urlYoutube" class="ratio ratio-16x9">
+          <iframe
+            [src]="getYoutubeEmbedUrl(selectedLesson.urlYoutube)"
+            allowfullscreen
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            frameborder="0">
+          </iframe>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeViewModal()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade" [class.show]="showViewModal" *ngIf="showViewModal"></div>

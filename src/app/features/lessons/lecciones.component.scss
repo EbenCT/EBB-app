@@ -1,0 +1,295 @@
+.lecciones-container {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+}
+
+.table {
+  td {
+    vertical-align: middle;
+  }
+
+  .btn-group {
+    .btn {
+      padding: 0.25rem 0.5rem;
+    }
+  }
+
+  .text-truncate {
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.modal {
+  &.show {
+    display: block;
+    opacity: 1;
+  }
+}
+
+.modal-backdrop {
+  &.show {
+    opacity: 0.5;
+  }
+}
+
+.lesson-content {
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 0.5rem;
+  line-height: 1.8;
+}
+
+.progress {
+  height: 25px;
+
+  .progress-bar {
+    transition: width 0.3s ease;
+  }
+}
+
+// Markdown Editor Styles
+.markdown-toolbar {
+  display: flex;
+  gap: 0;
+  border: 1px solid #dee2e6;
+  border-bottom: none;
+  border-radius: 0.25rem 0.25rem 0 0;
+  padding: 0.25rem;
+  background-color: #f8f9fa;
+
+  .btn {
+    border-radius: 0.25rem;
+    transition: all 0.2s;
+
+    &:hover {
+      background-color: #e9ecef;
+      transform: translateY(-1px);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+
+    i {
+      font-size: 0.9rem;
+    }
+  }
+}
+
+.markdown-editor {
+  border-radius: 0 0 0.25rem 0.25rem !important;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.95rem;
+  resize: vertical;
+}
+
+.markdown-preview {
+  background-color: #ffffff;
+  border: 1px solid #dee2e6;
+  min-height: 100px;
+  max-height: 400px;
+  overflow-y: auto;
+
+  // Estilos para el contenido renderizado
+  h1, h2, h3, h4, h5, h6 {
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+  }
+
+  h1 { font-size: 2rem; }
+  h2 { font-size: 1.75rem; }
+  h3 { font-size: 1.5rem; }
+  h4 { font-size: 1.25rem; }
+  h5 { font-size: 1.1rem; }
+  h6 { font-size: 1rem; }
+
+  p {
+    margin-bottom: 1rem;
+  }
+
+  strong, b {
+    font-weight: 700;
+  }
+
+  em, i {
+    font-style: italic;
+  }
+
+  u {
+    text-decoration: underline;
+  }
+
+  ul, ol {
+    margin-left: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  li {
+    margin-bottom: 0.25rem;
+  }
+
+  a {
+    color: #0d6efd;
+    text-decoration: underline;
+
+    &:hover {
+      color: #0a58ca;
+    }
+  }
+
+  code {
+    background-color: #f8f9fa;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.9em;
+  }
+
+  pre {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.25rem;
+    overflow-x: auto;
+
+    code {
+      padding: 0;
+      background-color: transparent;
+    }
+  }
+
+  blockquote {
+    border-left: 4px solid #dee2e6;
+    padding-left: 1rem;
+    margin-left: 0;
+    color: #6c757d;
+  }
+}
+
+// Estilos para contenido Markdown en la vista de lección
+.markdown-content {
+  padding: 1.5rem;
+  line-height: 1.8;
+  color: #212529;
+
+  h1, h2, h3, h4, h5, h6 {
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+    color: #0d6efd;
+  }
+
+  h1 { font-size: 2.5rem; border-bottom: 2px solid #dee2e6; padding-bottom: 0.5rem; }
+  h2 { font-size: 2rem; }
+  h3 { font-size: 1.75rem; }
+  h4 { font-size: 1.5rem; }
+  h5 { font-size: 1.25rem; }
+  h6 { font-size: 1.1rem; }
+
+  p {
+    margin-bottom: 1.25rem;
+    text-align: justify;
+  }
+
+  strong, b {
+    font-weight: 700;
+    color: #000;
+  }
+
+  em, i {
+    font-style: italic;
+  }
+
+  u {
+    text-decoration: underline;
+  }
+
+  ul, ol {
+    margin-left: 2rem;
+    margin-bottom: 1.25rem;
+  }
+
+  li {
+    margin-bottom: 0.5rem;
+  }
+
+  a {
+    color: #0d6efd;
+    text-decoration: none;
+    font-weight: 500;
+
+    &:hover {
+      color: #0a58ca;
+      text-decoration: underline;
+    }
+  }
+
+  code {
+    background-color: #f8f9fa;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.9em;
+    color: #d63384;
+  }
+
+  pre {
+    background-color: #282c34;
+    color: #abb2bf;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    margin-bottom: 1.25rem;
+
+    code {
+      padding: 0;
+      background-color: transparent;
+      color: inherit;
+    }
+  }
+
+  blockquote {
+    border-left: 4px solid #0d6efd;
+    padding-left: 1.5rem;
+    margin-left: 0;
+    margin-bottom: 1.25rem;
+    color: #6c757d;
+    font-style: italic;
+  }
+
+  hr {
+    margin: 2rem 0;
+    border: 0;
+    border-top: 2px solid #dee2e6;
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.5rem;
+    margin: 1rem 0;
+  }
+
+  table {
+    width: 100%;
+    margin-bottom: 1.25rem;
+    border-collapse: collapse;
+
+    th, td {
+      padding: 0.75rem;
+      border: 1px solid #dee2e6;
+    }
+
+    th {
+      background-color: #f8f9fa;
+      font-weight: 600;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f8f9fa;
+    }
+  }
+}

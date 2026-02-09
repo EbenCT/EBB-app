@@ -1,0 +1,104 @@
+<div class="registro-container">
+  <div class="registro-card">
+    <div class="card-body">
+      <!-- Logo -->
+      <div class="text-center mb-4">
+        <img src="assets/img/logo.svg" alt="Logo" height="60">
+      </div>
+
+      <h2 class="text-center mb-2">Crear cuenta</h2>
+      <p class="text-center text-muted mb-4">Regístrate para solicitar inscripción a nuestros cursos</p>
+
+      <!-- Formulario manual -->
+      <form (ngSubmit)="register()">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Nombre *</label>
+            <input
+              type="text"
+              class="form-control"
+              [(ngModel)]="nombre"
+              name="nombre"
+              placeholder="Ingresa tu nombre"
+              required
+              [disabled]="loading">
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Apellido *</label>
+            <input
+              type="text"
+              class="form-control"
+              [(ngModel)]="apellido"
+              name="apellido"
+              placeholder="Ingresa tu apellido"
+              required
+              [disabled]="loading">
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Correo electrónico *</label>
+          <input
+            type="email"
+            class="form-control"
+            [(ngModel)]="email"
+            name="email"
+            placeholder="correo@ejemplo.com"
+            required
+            [disabled]="loading">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Contraseña *</label>
+          <input
+            type="password"
+            class="form-control"
+            [(ngModel)]="password"
+            name="password"
+            placeholder="Mínimo 6 caracteres"
+            required
+            [disabled]="loading">
+          <small class="text-muted">Mínimo 6 caracteres</small>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Confirmar contraseña *</label>
+          <input
+            type="password"
+            class="form-control"
+            [(ngModel)]="confirmPassword"
+            name="confirmPassword"
+            placeholder="Repite tu contraseña"
+            required
+            [disabled]="loading">
+        </div>
+
+        <button
+          type="submit"
+          class="btn btn-primary w-100 mb-3"
+          [disabled]="loading">
+          <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+          <i *ngIf="!loading" class="fas fa-user-plus me-2"></i>
+          {{ loading ? 'Creando cuenta...' : 'Crear cuenta' }}
+        </button>
+      </form>
+
+      <div class="divider">
+        <span>O</span>
+      </div>
+
+      <!-- Botón Google -->
+      <button
+        (click)="registerWithGoogle()"
+        class="btn btn-outline-dark w-100 mb-3"
+        [disabled]="loading">
+        <i class="fab fa-google me-2"></i> Continuar con Google
+      </button>
+
+      <p class="text-center mb-0">
+        ¿Ya tienes cuenta? <a routerLink="/login" class="text-primary">Inicia sesión aquí</a>
+      </p>
+    </div>
+  </div>
+</div>

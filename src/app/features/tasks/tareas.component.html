@@ -1,0 +1,303 @@
+<div class="tareas-container">
+  <!-- Header -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" style="cursor: pointer;" (click)="goToDashboard()">
+        <img src="assets/img/logo.svg" alt="Logo" height="40">
+      </a>
+      <div class="d-flex align-items-center">
+        <button class="btn btn-outline-light btn-sm me-2" (click)="goBack()">
+          <i class="fas fa-arrow-left"></i> Volver
+        </button>
+        <button class="btn btn-outline-light btn-sm" (click)="logout()">
+          <i class="fas fa-sign-out-alt"></i> Salir
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="container-fluid py-4">
+    <!-- Título -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <h2><i class="fas fa-tasks"></i> Tareas de la Lección</h2>
+        <p class="text-muted" *ngIf="leccion">{{ leccion.titulo }}</p>
+      </div>
+    </div>
+
+    <!-- Botón crear -->
+    <div class="row mb-4">
+      <div class="col-12 text-end">
+        <button class="btn btn-primary" (click)="openCreateModal()">
+          <i class="fas fa-plus"></i> Nueva Tarea
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Cargando...</span>
+      </div>
+      <p class="mt-2">Cargando tareas...</p>
+    </div>
+
+    <!-- Lista de Tareas -->
+    <div *ngIf="!loading" class="row">
+      <div class="col-12">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Título</th>
+                    <th>Tipo Entrega</th>
+                    <th>Fecha Inicio</th>
+                    <th>Fecha Fin</th>
+                    <th>Ponderación</th>
+                    <th class="text-center">Visible</th>
+                    <th class="text-center">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let tarea of tareas">
+                    <td><strong>{{ tarea.titulo }}</strong></td>
+                    <td>
+                      <span class="badge bg-info">
+                        {{ getTipoEntregaText(tarea.tipoEntrega) }}
+                      </span>
+                    </td>
+                    <td>{{ formatDate(tarea.fechaInicio) }}</td>
+                    <td>{{ formatDate(tarea.fechaFin) }}</td>
+                    <td>
+                      <span class="badge bg-secondary">{{ tarea.ponderacion }}%</span>
+                    </td>
+                    <td class="text-center">
+                      <button
+                        class="btn btn-sm"
+                        [class.btn-success]="tarea.visible !== false"
+                        [class.btn-secondary]="tarea.visible === false"
+                        (click)="toggleVisibility(tarea)"
+                        title="Cambiar visibilidad">
+                        <i class="fas" [class.fa-eye]="tarea.visible !== false" [class.fa-eye-slash]="tarea.visible === false"></i>
+                      </button>
+                    </td>
+                    <td class="text-center">
+                      <div class="btn-group" role="group">
+                        <button
+                          class="btn btn-sm btn-outline-success"
+                          (click)="viewSubmissions(tarea)"
+                          title="Ver entregas">
+                          <i class="fas fa-file-upload"></i>
+                        </button>
+                        <button
+                          class="btn btn-sm btn-outline-primary"
+                          (click)="editTarea(tarea)"
+                          title="Editar">
+                          <i class="fas fa-edit"></i>
+                        </button>
+                        <button
+                          class="btn btn-sm btn-outline-danger"
+                          (click)="deleteTarea(tarea)"
+                          title="Eliminar">
+                          <i class="fas fa-trash"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr *ngIf="tareas.length === 0">
+                    <td colspan="6" class="text-center text-muted py-4">
+                      <i class="fas fa-tasks fa-3x mb-3"></i>
+                      <p>No hay tareas creadas aún</p>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Crear Tarea -->
+<div class="modal fade" [class.show]="showCreateModal" [style.display]="showCreateModal ? 'block' : 'none'" *ngIf="showCreateModal">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Crear Nueva Tarea</h5>
+        <button type="button" class="btn-close" (click)="closeCreateModal()"></button>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="mb-3">
+            <label class="form-label">Título *</label>
+            <input type="text" class="form-control" [(ngModel)]="newTarea.titulo" name="titulo" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Descripción</label>
+            <textarea class="form-control" [(ngModel)]="newTarea.descripcion" name="descripcion" rows="3"></textarea>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Instrucciones</label>
+            <textarea class="form-control" [(ngModel)]="newTarea.instrucciones" name="instrucciones" rows="4"></textarea>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Tipo de Entrega *</label>
+              <select class="form-select" [(ngModel)]="newTarea.tipoEntrega" name="tipoEntrega">
+                <option value="texto">Solo texto</option>
+                <option value="archivo">Solo archivo</option>
+                <option value="ambos">Texto y archivo</option>
+              </select>
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Ponderación (%)</label>
+              <input type="number" class="form-control" [(ngModel)]="newTarea.ponderacion" name="ponderacion" min="0" max="100">
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Fecha y Hora de Inicio *</label>
+              <input type="datetime-local" class="form-control" [(ngModel)]="newTarea.fechaInicio" name="fechaInicio">
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Fecha y Hora de Fin *</label>
+              <input type="datetime-local" class="form-control" [(ngModel)]="newTarea.fechaFin" name="fechaFin">
+            </div>
+          </div>
+
+          <div class="row" *ngIf="newTarea.tipoEntrega === 'archivo' || newTarea.tipoEntrega === 'ambos'">
+            <div class="col-md-8 mb-3">
+              <label class="form-label">Archivos Permitidos</label>
+              <input type="text" class="form-control" [(ngModel)]="newTarea.archivosPermitidos" name="archivosPermitidos" placeholder=".pdf,.docx,.jpg,.png">
+              <small class="text-muted">Separar por comas</small>
+            </div>
+
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Tamaño Máximo (MB)</label>
+              <input type="number" class="form-control" [(ngModel)]="newTarea.tamanoMaximo" name="tamanoMaximo" min="1">
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeCreateModal()">Cancelar</button>
+        <button type="button" class="btn btn-primary" (click)="createTarea()">Crear Tarea</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade" [class.show]="showCreateModal" *ngIf="showCreateModal"></div>
+
+<!-- Modal de Editar Tarea -->
+<div class="modal fade" [class.show]="showEditModal" [style.display]="showEditModal ? 'block' : 'none'" *ngIf="showEditModal">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Editar Tarea</h5>
+        <button type="button" class="btn-close" (click)="closeEditModal()"></button>
+      </div>
+      <div class="modal-body" *ngIf="selectedTarea">
+        <form>
+          <div class="mb-3">
+            <label class="form-label">Título</label>
+            <input type="text" class="form-control" [(ngModel)]="selectedTarea.titulo" name="titulo">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Descripción</label>
+            <textarea class="form-control" [(ngModel)]="selectedTarea.descripcion" name="descripcion" rows="3"></textarea>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Instrucciones</label>
+            <textarea class="form-control" [(ngModel)]="selectedTarea.instrucciones" name="instrucciones" rows="4"></textarea>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Ponderación (%)</label>
+              <input type="number" class="form-control" [(ngModel)]="selectedTarea.ponderacion" name="ponderacion" min="0" max="100">
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Tamaño Máximo (MB)</label>
+              <input type="number" class="form-control" [(ngModel)]="selectedTarea.tamanoMaximo" name="tamanoMaximo" min="1">
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeEditModal()">Cancelar</button>
+        <button type="button" class="btn btn-primary" (click)="saveTarea()">Guardar Cambios</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade" [class.show]="showEditModal" *ngIf="showEditModal"></div>
+
+<!-- Modal de Ver Entregas -->
+<div class="modal fade" [class.show]="showSubmissionsModal" [style.display]="showSubmissionsModal ? 'block' : 'none'" *ngIf="showSubmissionsModal">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Entregas - {{ selectedTarea?.titulo }}</h5>
+        <button type="button" class="btn-close" (click)="closeSubmissionsModal()"></button>
+      </div>
+      <div class="modal-body">
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Estudiante</th>
+                <th>Fecha Entrega</th>
+                <th>Estado</th>
+                <th>Calificación</th>
+                <th class="text-center">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let entrega of entregas">
+                <td>{{ entrega.estudianteId }}</td>
+                <td>{{ formatDate(entrega.fechaEntrega) }}</td>
+                <td>
+                  <span class="badge" [ngClass]="getEstadoBadgeClass(entrega.estado)">
+                    {{ entrega.estado }}
+                  </span>
+                </td>
+                <td>
+                  <strong *ngIf="entrega.calificacion !== undefined">{{ entrega.calificacion }}</strong>
+                  <span *ngIf="entrega.calificacion === undefined" class="text-muted">Sin calificar</span>
+                </td>
+                <td class="text-center">
+                  <button class="btn btn-sm btn-primary" (click)="goToGrade(entrega)">
+                    <i class="fas fa-edit"></i> Calificar
+                  </button>
+                </td>
+              </tr>
+              <tr *ngIf="entregas.length === 0">
+                <td colspan="5" class="text-center text-muted py-4">
+                  No hay entregas aún
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeSubmissionsModal()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade" [class.show]="showSubmissionsModal" *ngIf="showSubmissionsModal"></div>

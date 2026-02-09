@@ -1,0 +1,29 @@
+.secciones-container {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+}
+
+.table {
+  td {
+    vertical-align: middle;
+  }
+
+  .btn-group {
+    .btn {
+      padding: 0.25rem 0.5rem;
+    }
+  }
+}
+
+.modal {
+  &.show {
+    display: block;
+    opacity: 1;
+  }
+}
+
+.modal-backdrop {
+  &.show {
+    opacity: 0.5;
+  }
+}

@@ -1,0 +1,313 @@
+<div class="secciones-container">
+  <!-- Header -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" style="cursor: pointer;" (click)="goToDashboard()">
+        <img src="assets/img/logo.svg" alt="Logo" height="40">
+      </a>
+      <div class="d-flex align-items-center">
+        <button class="btn btn-outline-light btn-sm me-2" (click)="goBack()">
+          <i class="fas fa-arrow-left"></i> Volver
+        </button>
+        <button class="btn btn-outline-light btn-sm" (click)="logout()">
+          <i class="fas fa-sign-out-alt"></i> Salir
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="container-fluid py-4">
+    <!-- Título -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <h2><i class="fas fa-list-alt"></i> Secciones del Curso</h2>
+        <p class="text-muted" *ngIf="curso">{{ curso.titulo }}</p>
+      </div>
+    </div>
+
+    <!-- Botón crear -->
+    <div class="row mb-4">
+      <div class="col-12 text-end">
+        <button class="btn btn-primary" (click)="openCreateModal()">
+          <i class="fas fa-plus"></i> Nueva Sección
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Cargando...</span>
+      </div>
+      <p class="mt-2">Cargando secciones...</p>
+    </div>
+
+    <!-- Lista de Secciones -->
+    <div *ngIf="!loading" class="row">
+      <div class="col-12">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Orden</th>
+                    <th>Título</th>
+                    <th>Descripción</th>
+                    <th>Elementos</th>
+                    <th>Desbloqueo</th>
+                    <th>Prerrequisitos</th>
+                    <th class="text-center">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let seccion of secciones">
+                    <td><span class="badge bg-secondary">{{ seccion.orden + 1 }}</span></td>
+                    <td><strong>{{ seccion.titulo }}</strong></td>
+                    <td>{{ seccion.descripcion }}</td>
+                    <td>
+                      <span class="text-muted">
+                        <i class="fas fa-book"></i> {{ seccion.elementos.length }}
+                      </span>
+                    </td>
+                    <td>
+                      <span class="badge" [ngClass]="seccion.desbloqueoProgresivo ? 'bg-warning' : 'bg-success'">
+                        {{ seccion.desbloqueoProgresivo ? 'Progresivo' : 'Libre' }}
+                      </span>
+                      <small class="d-block text-muted mt-1" *ngIf="seccion.desbloqueoProgresivo">
+                        {{ seccion.requiereCompletarTodo ? '100%' : (seccion.porcentajeMinimo || 70) + '%' }}
+                      </small>
+                    </td>
+                    <td>
+                      <span *ngIf="!seccion.desbloqueoProgresivo || !seccion.prerequisitos || seccion.prerequisitos.length === 0" class="text-muted">
+                        -
+                      </span>
+                      <div *ngIf="seccion.desbloqueoProgresivo && seccion.prerequisitos && seccion.prerequisitos.length > 0">
+                        <span class="badge bg-info me-1" *ngFor="let prereqId of seccion.prerequisitos">
+                          {{ getSeccionTitulo(prereqId) }}
+                        </span>
+                      </div>
+                    </td>
+                    <td class="text-center">
+                      <div class="btn-group" role="group">
+                        <button
+                          class="btn btn-sm btn-outline-info"
+                          (click)="goToLessons(seccion.id)"
+                          title="Ver lecciones">
+                          <i class="fas fa-book-open"></i> Lecciones
+                        </button>
+                        <button
+                          class="btn btn-sm btn-outline-secondary"
+                          (click)="goToExams(seccion.id)"
+                          title="Ver exámenes">
+                          <i class="fas fa-file-alt"></i> Exámenes
+                        </button>
+                        <button
+                          class="btn btn-sm btn-outline-primary"
+                          (click)="editSection(seccion)"
+                          title="Editar">
+                          <i class="fas fa-edit"></i>
+                        </button>
+                        <button
+                          class="btn btn-sm btn-outline-danger"
+                          (click)="deleteSection(seccion)"
+                          title="Eliminar">
+                          <i class="fas fa-trash"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr *ngIf="secciones.length === 0">
+                    <td colspan="7" class="text-center text-muted py-4">
+                      <i class="fas fa-list-alt fa-3x mb-3"></i>
+                      <p>No hay secciones creadas aún</p>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Crear Sección -->
+<div class="modal fade" [class.show]="showCreateModal" [style.display]="showCreateModal ? 'block' : 'none'" *ngIf="showCreateModal">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Crear Nueva Sección</h5>
+        <button type="button" class="btn-close" (click)="closeCreateModal()"></button>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="mb-3">
+            <label class="form-label">Título *</label>
+            <input type="text" class="form-control" [(ngModel)]="newSection.titulo" name="titulo" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Descripción</label>
+            <textarea class="form-control" [(ngModel)]="newSection.descripcion" name="descripcion" rows="3"></textarea>
+          </div>
+
+          <hr>
+          <h6><i class="fas fa-lock"></i> Configuración de Desbloqueo</h6>
+
+          <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" [(ngModel)]="newSection.desbloqueoProgresivo" name="desbloqueo" id="desbloqueo">
+            <label class="form-check-label" for="desbloqueo">
+              <strong>Activar desbloqueo progresivo</strong>
+              <small class="d-block text-muted">Los estudiantes deben cumplir requisitos para acceder a esta sección</small>
+            </label>
+          </div>
+
+          <div *ngIf="newSection.desbloqueoProgresivo" class="mt-3">
+            <div class="mb-3">
+              <label class="form-label">Secciones Prerrequisito</label>
+              <small class="d-block text-muted mb-2">Selecciona las secciones que deben completarse antes de acceder a esta</small>
+              <div class="prerequisitos-list" *ngIf="seccionesDisponiblesParaPrerequisitos.length > 0">
+                <div class="form-check" *ngFor="let seccion of seccionesDisponiblesParaPrerequisitos">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    [checked]="isPrerequisitoSelectedCreate(seccion.id)"
+                    (change)="togglePrerequisitoCreate(seccion.id)"
+                    [id]="'prereq-create-' + seccion.id">
+                  <label class="form-check-label" [for]="'prereq-create-' + seccion.id">
+                    <strong>{{ seccion.orden + 1 }}.</strong> {{ seccion.titulo }}
+                  </label>
+                </div>
+              </div>
+              <p class="text-muted mt-2" *ngIf="seccionesDisponiblesParaPrerequisitos.length === 0">
+                No hay secciones disponibles como prerrequisitos
+              </p>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3 form-check">
+                  <input type="checkbox" class="form-check-input" [(ngModel)]="newSection.requiereCompletarTodo" name="completarTodo" id="completarTodo">
+                  <label class="form-check-label" for="completarTodo">
+                    <strong>Completar 100%</strong>
+                    <small class="d-block text-muted">Requiere completar todo el contenido de las secciones prerrequisito</small>
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-6" *ngIf="!newSection.requiereCompletarTodo">
+                <div class="mb-3">
+                  <label class="form-label">Porcentaje Mínimo (%)</label>
+                  <input
+                    type="number"
+                    class="form-control"
+                    [(ngModel)]="newSection.porcentajeMinimo"
+                    name="porcentajeMinimo"
+                    min="0"
+                    max="100"
+                    step="5">
+                  <small class="text-muted">Progreso mínimo requerido en las secciones prerrequisito</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeCreateModal()">Cancelar</button>
+        <button type="button" class="btn btn-primary" (click)="createSection()">Crear Sección</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade" [class.show]="showCreateModal" *ngIf="showCreateModal"></div>
+
+<!-- Modal de Editar Sección -->
+<div class="modal fade" [class.show]="showEditModal" [style.display]="showEditModal ? 'block' : 'none'" *ngIf="showEditModal">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Editar Sección</h5>
+        <button type="button" class="btn-close" (click)="closeEditModal()"></button>
+      </div>
+      <div class="modal-body" *ngIf="selectedSection">
+        <form>
+          <div class="mb-3">
+            <label class="form-label">Título</label>
+            <input type="text" class="form-control" [(ngModel)]="selectedSection.titulo" name="titulo">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Descripción</label>
+            <textarea class="form-control" [(ngModel)]="selectedSection.descripcion" name="descripcion" rows="3"></textarea>
+          </div>
+
+          <hr>
+          <h6><i class="fas fa-lock"></i> Configuración de Desbloqueo</h6>
+
+          <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" [(ngModel)]="selectedSection.desbloqueoProgresivo" name="desbloqueoEdit" id="desbloqueoEdit">
+            <label class="form-check-label" for="desbloqueoEdit">
+              <strong>Activar desbloqueo progresivo</strong>
+              <small class="d-block text-muted">Los estudiantes deben cumplir requisitos para acceder a esta sección</small>
+            </label>
+          </div>
+
+          <div *ngIf="selectedSection.desbloqueoProgresivo" class="mt-3">
+            <div class="mb-3">
+              <label class="form-label">Secciones Prerrequisito</label>
+              <small class="d-block text-muted mb-2">Selecciona las secciones que deben completarse antes de acceder a esta</small>
+              <div class="prerequisitos-list" *ngIf="seccionesDisponiblesParaPrerequisitos.length > 0">
+                <div class="form-check" *ngFor="let seccion of seccionesDisponiblesParaPrerequisitos">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    [checked]="isPrerequisitoSelectedEdit(seccion.id)"
+                    (change)="togglePrerequisitoEdit(seccion.id)"
+                    [id]="'prereq-edit-' + seccion.id">
+                  <label class="form-check-label" [for]="'prereq-edit-' + seccion.id">
+                    <strong>{{ seccion.orden + 1 }}.</strong> {{ seccion.titulo }}
+                  </label>
+                </div>
+              </div>
+              <p class="text-muted mt-2" *ngIf="seccionesDisponiblesParaPrerequisitos.length === 0">
+                No hay secciones disponibles como prerrequisitos
+              </p>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3 form-check">
+                  <input type="checkbox" class="form-check-input" [(ngModel)]="selectedSection.requiereCompletarTodo" name="completarTodoEdit" id="completarTodoEdit">
+                  <label class="form-check-label" for="completarTodoEdit">
+                    <strong>Completar 100%</strong>
+                    <small class="d-block text-muted">Requiere completar todo el contenido de las secciones prerrequisito</small>
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-6" *ngIf="!selectedSection.requiereCompletarTodo">
+                <div class="mb-3">
+                  <label class="form-label">Porcentaje Mínimo (%)</label>
+                  <input
+                    type="number"
+                    class="form-control"
+                    [(ngModel)]="selectedSection.porcentajeMinimo"
+                    name="porcentajeMinimoEdit"
+                    min="0"
+                    max="100"
+                    step="5">
+                  <small class="text-muted">Progreso mínimo requerido en las secciones prerrequisito</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeEditModal()">Cancelar</button>
+        <button type="button" class="btn btn-primary" (click)="saveSection()">Guardar Cambios</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade" [class.show]="showEditModal" *ngIf="showEditModal"></div>

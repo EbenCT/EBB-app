@@ -1,0 +1,90 @@
+<div class="login-container">
+  <div class="login-card">
+    <div class="login-header">
+      <img src="assets/img/logos/eblogo.png" alt="Logo" class="logo">
+      <h1>Escuela Bíblica CAVEVID</h1>
+      <p>Inicia sesión para acceder al sistema</p>
+    </div>
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+      <!-- Email -->
+      <div class="form-group">
+        <label for="email">Correo Electrónico</label>
+        <input 
+          type="email" 
+          id="email" 
+          formControlName="email"
+          placeholder="tu@email.com"
+          [class.error]="emailControl?.invalid && emailControl?.touched"
+        >
+        <div class="error-message" *ngIf="emailControl?.invalid && emailControl?.touched">
+          <span *ngIf="emailControl?.errors?.['required']">El email es requerido</span>
+          <span *ngIf="emailControl?.errors?.['email']">Email inválido</span>
+        </div>
+      </div>
+
+      <!-- Password -->
+      <div class="form-group">
+        <label for="password">Contraseña</label>
+        <div class="password-input">
+          <input 
+            [type]="hidePassword ? 'password' : 'text'" 
+            id="password" 
+            formControlName="password"
+            placeholder="••••••••"
+            [class.error]="passwordControl?.invalid && passwordControl?.touched"
+          >
+          <button 
+            type="button" 
+            class="toggle-password"
+            (click)="hidePassword = !hidePassword"
+          >
+            {{ hidePassword ? '👁️' : '🙈' }}
+          </button>
+        </div>
+        <div class="error-message" *ngIf="passwordControl?.invalid && passwordControl?.touched">
+          <span *ngIf="passwordControl?.errors?.['required']">La contraseña es requerida</span>
+          <span *ngIf="passwordControl?.errors?.['minlength']">Mínimo 6 caracteres</span>
+        </div>
+      </div>
+
+      <!-- Error general -->
+      <div class="alert-error" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+
+      <!-- Botón de login -->
+      <button 
+        type="submit" 
+        class="btn-primary"
+        [disabled]="loading"
+      >
+        <span *ngIf="!loading">Iniciar Sesión</span>
+        <span *ngIf="loading">Cargando...</span>
+      </button>
+
+      <!-- Divider -->
+      <div class="divider">
+        <span>o</span>
+      </div>
+
+      <!-- Login con Google -->
+      <button 
+        type="button" 
+        class="btn-google"
+        (click)="loginWithGoogle()"
+        [disabled]="loading"
+      >
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+        Continuar con Google
+      </button>
+    </form>
+
+    <div class="login-footer">
+      <a routerLink="/register" class="me-3">
+        <i class="fas fa-user-plus"></i> Crear usuario
+      </a>
+      <a routerLink="/home">← Volver al inicio</a>
+    </div>
+  </div>
+</div>

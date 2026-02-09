@@ -1,0 +1,196 @@
+<div class="progreso-container">
+  <!-- Header -->
+  <div class="header">
+    <button class="btn-back" (click)="volver()">
+      <i class="fas fa-arrow-left"></i> Volver
+    </button>
+    <h1><i class="fas fa-chart-line"></i> Mis Calificaciones</h1>
+    <p class="curso-titulo">{{ cursoTitulo }}</p>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading" *ngIf="loading">
+    <i class="fas fa-spinner fa-spin"></i>
+    <p>Cargando...</p>
+  </div>
+
+  <!-- Content -->
+  <div class="content" *ngIf="!loading && progreso && calificacion && configuracion">
+
+    <!-- Tabla Principal de Calificaciones -->
+    <div class="tabla-calificaciones">
+      <table class="tabla-notas">
+        <thead>
+          <tr>
+            <th>Componente</th>
+            <th>Nota Obtenida</th>
+            <th>Ponderación</th>
+            <th>Nota Ponderada</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Tareas -->
+          <tr>
+            <td>
+              <i class="fas fa-tasks componente-icon"></i>
+              <span>Tareas</span>
+              <small>({{ progreso.tareasEntregadas.length }}/{{ progreso.tareasTotales }})</small>
+            </td>
+            <td class="nota-obtenida" [class]="getCalificacionClase(calificacion.promedioTareas)">
+              {{ calificacion.promedioTareas | number:'1.0-2' }}
+            </td>
+            <td class="ponderacion">
+              {{ configuracion.ponderacionTareas }}%
+            </td>
+            <td class="nota-ponderada">
+              {{ (calificacion.promedioTareas * configuracion.ponderacionTareas / 100) | number:'1.0-2' }}
+            </td>
+          </tr>
+
+          <!-- Exámenes Prácticos -->
+          <tr>
+            <td>
+              <i class="fas fa-file-alt componente-icon"></i>
+              <span>Exámenes Prácticos</span>
+              <small>({{ progreso.examenesRealizados.length }}/{{ progreso.examenesTotales }})</small>
+            </td>
+            <td class="nota-obtenida" [class]="getCalificacionClase(calificacion.promedioExamenes)">
+              {{ calificacion.promedioExamenes | number:'1.0-2' }}
+            </td>
+            <td class="ponderacion">
+              {{ configuracion.ponderacionExamenes }}%
+            </td>
+            <td class="nota-ponderada">
+              {{ (calificacion.promedioExamenes * configuracion.ponderacionExamenes / 100) | number:'1.0-2' }}
+            </td>
+          </tr>
+
+          <!-- Examen Final -->
+          <tr *ngIf="configuracion.ponderacionExamenFinal && configuracion.ponderacionExamenFinal > 0">
+            <td>
+              <i class="fas fa-star componente-icon examen-final"></i>
+              <span>Examen Final</span>
+              <small>{{ (calificacion.promedioExamenFinal || 0) > 0 ? 'Completado' : 'Pendiente' }}</small>
+            </td>
+            <td class="nota-obtenida" [class]="getCalificacionClase(calificacion.promedioExamenFinal || 0)">
+              {{ (calificacion.promedioExamenFinal || 0) | number:'1.0-2' }}
+            </td>
+            <td class="ponderacion">
+              {{ configuracion.ponderacionExamenFinal }}%
+            </td>
+            <td class="nota-ponderada">
+              {{ ((calificacion.promedioExamenFinal || 0) * configuracion.ponderacionExamenFinal / 100) | number:'1.0-2' }}
+            </td>
+          </tr>
+
+          <!-- Asistencia -->
+          <tr *ngIf="configuracion.ponderacionAsistencia && configuracion.ponderacionAsistencia > 0">
+            <td>
+              <i class="fas fa-user-check componente-icon"></i>
+              <span>Asistencia</span>
+              <small>({{ totalAsistencias }} registros)</small>
+            </td>
+            <td class="nota-obtenida" [class]="getCalificacionClase(porcentajeAsistencia)">
+              {{ porcentajeAsistencia | number:'1.0-0' }}
+            </td>
+            <td class="ponderacion">
+              {{ configuracion.ponderacionAsistencia }}%
+            </td>
+            <td class="nota-ponderada">
+              {{ (porcentajeAsistencia * configuracion.ponderacionAsistencia / 100) | number:'1.0-2' }}
+            </td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr class="fila-total">
+            <td colspan="3"><strong>CALIFICACIÓN FINAL:</strong></td>
+            <td class="calificacion-final" [class]="getCalificacionClase(calificacion.calificacionFinal)">
+              <strong>{{ calificacion.calificacionFinal | number:'1.0-2' }}</strong>
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <!-- Estado Badge -->
+      <div class="estado-badge" [class]="getEstadoClase()">
+        <i class="fas" [class]="getEstadoIcono()"></i>
+        <span>{{ getEstadoTexto() }}</span>
+      </div>
+    </div>
+
+    <!-- Sección Secundaria: Estadísticas y Gráfico -->
+    <div class="seccion-secundaria">
+      <h2><i class="fas fa-chart-bar"></i> Estadísticas</h2>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <i class="fas fa-tasks"></i>
+          <span class="stat-numero">{{ progreso.tareasTotales - progreso.tareasEntregadas.length }}</span>
+          <span class="stat-label">Tareas Pendientes</span>
+        </div>
+        <div class="stat-card">
+          <i class="fas fa-file-alt"></i>
+          <span class="stat-numero">{{ progreso.examenesTotales - progreso.examenesRealizados.length }}</span>
+          <span class="stat-label">Exámenes Pendientes</span>
+        </div>
+        <div class="stat-card">
+          <i class="fas fa-percentage"></i>
+          <span class="stat-numero">{{ progreso.porcentajeAvance }}%</span>
+          <span class="stat-label">Avance del Curso</span>
+        </div>
+        <div class="stat-card">
+          <i class="fas fa-clock"></i>
+          <span class="stat-numero">{{ progreso.ultimaActividad | date:'dd/MM' }}</span>
+          <span class="stat-label">Última Actividad</span>
+        </div>
+      </div>
+
+      <!-- Gráfico Compacto -->
+      <div class="grafico-compacto">
+        <h3>Distribución de Notas</h3>
+        <canvas #chartCanvas></canvas>
+      </div>
+    </div>
+
+    <!-- Historial de Asistencia (solo si está configurada) -->
+    <div class="seccion-asistencia" *ngIf="configuracion.ponderacionAsistencia && configuracion.ponderacionAsistencia > 0 && asistencias.length > 0">
+      <h2><i class="fas fa-calendar-check"></i> Historial de Asistencia</h2>
+
+      <div class="tabla-asistencia">
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Estado</th>
+              <th>Puntos</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let asistencia of asistencias">
+              <td>
+                <i class="fas fa-calendar-day"></i>
+                {{ asistencia.fecha | date:'dd/MM/yyyy' }}
+              </td>
+              <td>
+                <span class="badge-estado" [class]="getEstadoAsistenciaClase(asistencia.estado)">
+                  <i class="fas" [class]="getEstadoAsistenciaIcono(asistencia.estado)"></i>
+                  {{ getEstadoAsistenciaTexto(asistencia.estado) }}
+                </span>
+              </td>
+              <td>
+                <span class="puntaje">{{ asistencia.puntaje | number:'1.0-2' }}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Mensaje de Motivación -->
+    <div class="mensaje-motivacion" *ngIf="calificacion.estado === 'en_progreso'">
+      <i class="fas fa-lightbulb"></i>
+      <p>¡Sigue adelante! Estás progresando muy bien en el curso.</p>
+    </div>
+
+  </div>
+</div>

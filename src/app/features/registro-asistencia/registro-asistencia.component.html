@@ -1,0 +1,216 @@
+<div class="container-fluid p-4">
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <button class="btn btn-outline-secondary me-3" (click)="goBack()">
+        <i class="fas fa-arrow-left"></i> Volver
+      </button>
+      <h2 class="d-inline-block mb-0">
+        <i class="fas fa-user-check"></i> Registro de Asistencia
+      </h2>
+    </div>
+  </div>
+
+  <!-- Información sobre fechas pasadas -->
+  <div class="alert alert-info d-flex align-items-center mb-4" role="alert">
+    <i class="fas fa-info-circle fa-2x me-3"></i>
+    <div>
+      <strong>Registro flexible:</strong> Puedes registrar asistencia para la fecha de hoy o para fechas pasadas (hasta 1 año atrás).
+      Selecciona la fecha deseada en el calendario de abajo.
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="text-center py-5" *ngIf="loading">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Cargando...</span>
+    </div>
+    <p class="mt-3">Cargando registro...</p>
+  </div>
+
+  <!-- Contenido Principal -->
+  <div *ngIf="!loading && curso">
+    <!-- Info del Curso y Fecha -->
+    <div class="card mb-4">
+      <div class="card-body">
+        <div class="row align-items-center">
+          <div class="col-md-6">
+            <h5 class="mb-2">
+              <i class="fas fa-book text-primary"></i> {{ curso.titulo }}
+            </h5>
+            <p class="text-muted mb-0">
+              <i class="fas fa-users"></i> {{ estudiantes.length }} estudiante{{ estudiantes.length !== 1 ? 's' : '' }}
+            </p>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">
+              <strong>Fecha del Registro:</strong>
+              <i class="fas fa-info-circle ms-2 text-info"
+                 title="Puedes registrar asistencia para fechas pasadas (hasta 1 año atrás)"></i>
+            </label>
+            <input
+              type="date"
+              class="form-control"
+              [(ngModel)]="fechaSeleccionada"
+              (change)="onFechaChange()"
+              [min]="minFecha"
+              [max]="maxFecha">
+            <small class="text-muted d-block mt-1">
+              {{ getFechaFormateada() }}
+              <span class="badge bg-info ms-2" *ngIf="esFechaPasada()">
+                <i class="fas fa-history"></i> Fecha pasada
+              </span>
+            </small>
+
+            <div class="alert alert-info mt-2 py-2 small" *ngIf="existeRegistro">
+              <i class="fas fa-info-circle"></i> Ya existe un registro para esta fecha. Puedes modificarlo.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Acciones Rápidas -->
+    <div class="card mb-4">
+      <div class="card-body">
+        <div class="d-flex flex-wrap gap-2">
+          <button class="btn btn-sm btn-outline-success" (click)="marcarTodos('P')">
+            <i class="fas fa-check-circle"></i> Marcar Todos Presente
+          </button>
+          <button class="btn btn-sm btn-outline-warning" (click)="marcarTodos('T')">
+            <i class="fas fa-clock"></i> Marcar Todos Tarde
+          </button>
+          <button class="btn btn-sm btn-outline-danger" (click)="marcarTodos('F')">
+            <i class="fas fa-times-circle"></i> Marcar Todos Falta
+          </button>
+          <button class="btn btn-sm btn-outline-info" (click)="marcarTodos('J')">
+            <i class="fas fa-file-medical"></i> Marcar Todos Justificado
+          </button>
+          <button class="btn btn-sm btn-outline-secondary" (click)="limpiarTodos()">
+            <i class="fas fa-eraser"></i> Limpiar Todo
+          </button>
+        </div>
+
+        <!-- Resumen de Estado -->
+        <div class="mt-3 p-3 bg-light rounded">
+          <strong>Resumen:</strong>
+          <span class="badge bg-success ms-2">P: {{ getConteoEstados()['P'] }}</span>
+          <span class="badge bg-warning text-dark ms-1">T: {{ getConteoEstados()['T'] }}</span>
+          <span class="badge bg-danger ms-1">F: {{ getConteoEstados()['F'] }}</span>
+          <span class="badge bg-info ms-1">J: {{ getConteoEstados()['J'] }}</span>
+          <span class="badge bg-secondary ms-1">Sin marcar: {{ getConteoEstados()['sin_marcar'] }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabla de Asistencia -->
+    <div class="card">
+      <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="fas fa-list-check"></i> Lista de Asistencia</h5>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th style="width: 50px;">#</th>
+                <th>Estudiante</th>
+                <th class="text-center" style="width: 100px;">
+                  <span class="text-success">P</span><br>
+                  <small class="text-muted">Presente</small>
+                </th>
+                <th class="text-center" style="width: 100px;">
+                  <span class="text-warning">T</span><br>
+                  <small class="text-muted">Tarde</small>
+                </th>
+                <th class="text-center" style="width: 100px;">
+                  <span class="text-danger">F</span><br>
+                  <small class="text-muted">Falta</small>
+                </th>
+                <th class="text-center" style="width: 100px;">
+                  <span class="text-info">J</span><br>
+                  <small class="text-muted">Justificado</small>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let estudiante of estudiantes; let i = index">
+                <td>{{ i + 1 }}</td>
+                <td>
+                  <i class="fas fa-user-graduate text-muted me-2"></i>
+                  <strong>{{ estudiante.nombreEstudiante }}</strong>
+                </td>
+                <td class="text-center">
+                  <button
+                    class="btn btn-sm"
+                    [class.btn-success]="estudiante.estado === 'P'"
+                    [class.btn-outline-success]="estudiante.estado !== 'P'"
+                    (click)="marcarEstado(estudiante, 'P')">
+                    <i class="fas"
+                       [class.fa-check-circle]="estudiante.estado === 'P'"
+                       [class.fa-circle]="estudiante.estado !== 'P'"></i>
+                  </button>
+                </td>
+                <td class="text-center">
+                  <button
+                    class="btn btn-sm"
+                    [class.btn-warning]="estudiante.estado === 'T'"
+                    [class.btn-outline-warning]="estudiante.estado !== 'T'"
+                    (click)="marcarEstado(estudiante, 'T')">
+                    <i class="fas"
+                       [class.fa-check-circle]="estudiante.estado === 'T'"
+                       [class.fa-circle]="estudiante.estado !== 'T'"></i>
+                  </button>
+                </td>
+                <td class="text-center">
+                  <button
+                    class="btn btn-sm"
+                    [class.btn-danger]="estudiante.estado === 'F'"
+                    [class.btn-outline-danger]="estudiante.estado !== 'F'"
+                    (click)="marcarEstado(estudiante, 'F')">
+                    <i class="fas"
+                       [class.fa-check-circle]="estudiante.estado === 'F'"
+                       [class.fa-circle]="estudiante.estado !== 'F'"></i>
+                  </button>
+                </td>
+                <td class="text-center">
+                  <button
+                    class="btn btn-sm"
+                    [class.btn-info]="estudiante.estado === 'J'"
+                    [class.btn-outline-info]="estudiante.estado !== 'J'"
+                    (click)="marcarEstado(estudiante, 'J')">
+                    <i class="fas"
+                       [class.fa-check-circle]="estudiante.estado === 'J'"
+                       [class.fa-circle]="estudiante.estado !== 'J'"></i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botón Guardar -->
+    <div class="text-center mt-4">
+      <button
+        class="btn btn-primary btn-lg px-5"
+        (click)="guardarAsistencias()"
+        [disabled]="guardando">
+        <span *ngIf="!guardando">
+          <i class="fas fa-save"></i> {{ existeRegistro ? 'Actualizar' : 'Guardar' }} Asistencia
+        </span>
+        <span *ngIf="guardando">
+          <span class="spinner-border spinner-border-sm me-2"></span>
+          Guardando...
+        </span>
+      </button>
+    </div>
+
+    <!-- Nota Informativa -->
+    <div class="alert alert-warning mt-4">
+      <i class="fas fa-exclamation-triangle"></i>
+      <strong>Nota:</strong> Los estudiantes sin marcar se guardarán automáticamente como "Falta (F)".
+    </div>
+  </div>
+</div>

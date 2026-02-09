@@ -1,0 +1,369 @@
+<div class="usuarios-container">
+  <!-- Header -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" style="cursor: pointer;" (click)="goToDashboard()">
+        <img src="assets/img/logo.svg" alt="Logo" height="40">
+      </a>
+      <div class="d-flex align-items-center">
+        <button class="btn btn-outline-light btn-sm me-2" (click)="goBack()">
+          <i class="fas fa-arrow-left"></i> Volver
+        </button>
+        <button class="btn btn-outline-light btn-sm" (click)="logout()">
+          <i class="fas fa-sign-out-alt"></i> Salir
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="container-fluid py-4">
+    <!-- Título -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <h2><i class="fas fa-users"></i> Gestión de Usuarios</h2>
+        <p class="text-muted">Administra todos los usuarios del sistema</p>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="row mb-4">
+      <div class="col-md-4 mb-3">
+        <div class="input-group">
+          <span class="input-group-text"><i class="fas fa-search"></i></span>
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Buscar por nombre, apellido o email..."
+            [(ngModel)]="searchTerm"
+            (ngModelChange)="applyFilters()">
+        </div>
+      </div>
+      <div class="col-md-3 mb-3">
+        <select
+          class="form-select"
+          [(ngModel)]="filterRole"
+          (ngModelChange)="applyFilters()">
+          <option value="todos">Todos los roles</option>
+          <option value="admin">Administradores</option>
+          <option value="profesor">Profesores</option>
+          <option value="estudiante">Estudiantes</option>
+        </select>
+      </div>
+      <div class="col-md-3 mb-3">
+        <select
+          class="form-select"
+          [(ngModel)]="filterStatus"
+          (ngModelChange)="applyFilters()">
+          <option value="todos">Todos los estados</option>
+          <option value="activos">Activos</option>
+          <option value="inactivos">Inactivos</option>
+        </select>
+      </div>
+      <div class="col-md-2 mb-3">
+        <button class="btn btn-primary w-100" (click)="openCreateModal()">
+          <i class="fas fa-plus"></i> Nuevo Usuario
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Cargando...</span>
+      </div>
+      <p class="mt-2">Cargando usuarios...</p>
+    </div>
+
+    <!-- Tabla de Usuarios -->
+    <div *ngIf="!loading" class="row">
+      <div class="col-12">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Email</th>
+                    <th>Rol</th>
+                    <th>Estado</th>
+                    <th>Fecha Registro</th>
+                    <th>Cursos</th>
+                    <th class="text-center">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let user of usuariosFiltrados">
+                    <td>
+                      <div class="d-flex align-items-center">
+                        <div class="user-avatar me-2" *ngIf="!user.fotoPerfil">
+                          {{ user.nombre.charAt(0) }}{{ user.apellido.charAt(0) }}
+                        </div>
+                        <img
+                          *ngIf="user.fotoPerfil"
+                          [src]="user.fotoPerfil"
+                          [alt]="user.nombre"
+                          class="user-avatar-img me-2">
+                        <div>
+                          <strong>{{ user.nombre }} {{ user.apellido }}</strong>
+                        </div>
+                      </div>
+                    </td>
+                    <td>{{ user.email }}</td>
+                    <td>
+                      <span class="badge" [ngClass]="getRoleBadgeClass(user.rol)">
+                        {{ getRoleLabel(user.rol) }}
+                      </span>
+                    </td>
+                    <td>
+                      <span class="badge" [ngClass]="user.activo ? 'bg-success' : 'bg-secondary'">
+                        {{ user.activo ? 'Activo' : 'Inactivo' }}
+                      </span>
+                    </td>
+                    <td>{{ user.fechaRegistro | date:'dd/MM/yyyy' }}</td>
+                    <td>
+                      <span *ngIf="user.rol === 'estudiante'" class="text-muted">
+                        <i class="fas fa-book"></i> {{ user.cursosInscritos?.length || 0 }}
+                      </span>
+                      <span *ngIf="user.rol === 'profesor'" class="text-muted">
+                        <i class="fas fa-chalkboard-teacher"></i> {{ user.cursosAsignados?.length || 0 }}
+                      </span>
+                      <span *ngIf="user.rol === 'admin'" class="text-muted">-</span>
+                    </td>
+                    <td class="text-center">
+                      <div class="btn-group" role="group">
+                        <button
+                          class="btn btn-sm btn-outline-info"
+                          (click)="viewUser(user)"
+                          title="Ver detalles">
+                          <i class="fas fa-eye"></i>
+                        </button>
+                        <button
+                          class="btn btn-sm btn-outline-primary"
+                          (click)="editUser(user)"
+                          title="Editar">
+                          <i class="fas fa-edit"></i>
+                        </button>
+                        <button
+                          class="btn btn-sm btn-outline-warning"
+                          (click)="toggleStatus(user)"
+                          [title]="user.activo ? 'Desactivar' : 'Activar'">
+                          <i class="fas" [ngClass]="user.activo ? 'fa-toggle-on' : 'fa-toggle-off'"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr *ngIf="usuariosFiltrados.length === 0">
+                    <td colspan="7" class="text-center text-muted py-4">
+                      <i class="fas fa-users fa-3x mb-3"></i>
+                      <p>No se encontraron usuarios</p>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="mt-3 text-muted">
+              <small>Mostrando {{ usuariosFiltrados.length }} de {{ usuarios.length }} usuarios</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Edición -->
+<div class="modal fade" [class.show]="showEditModal" [style.display]="showEditModal ? 'block' : 'none'" *ngIf="showEditModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Editar Usuario</h5>
+        <button type="button" class="btn-close" (click)="closeEditModal()"></button>
+      </div>
+      <div class="modal-body" *ngIf="selectedUser">
+        <form>
+          <div class="mb-3">
+            <label class="form-label">Nombre</label>
+            <input type="text" class="form-control" [(ngModel)]="selectedUser.nombre" name="nombre">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Apellido</label>
+            <input type="text" class="form-control" [(ngModel)]="selectedUser.apellido" name="apellido">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-control" [(ngModel)]="selectedUser.email" name="email">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Rol</label>
+            <select class="form-select" [(ngModel)]="selectedUser.rol" name="rol">
+              <option value="estudiante">Estudiante</option>
+              <option value="profesor">Profesor</option>
+              <option value="admin">Administrador</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Foto de Perfil</label>
+            <div class="text-center mb-2" *ngIf="imagePreviewEdit">
+              <img [src]="imagePreviewEdit" class="img-thumbnail" style="max-width: 150px; max-height: 150px; object-fit: cover;">
+            </div>
+            <input
+              type="file"
+              class="form-control"
+              accept="image/*"
+              (change)="onImageSelectedEdit($event)"
+              [disabled]="uploadingImage">
+            <small class="text-muted">Formatos: JPG, PNG, GIF, WEBP (Máx. 5MB)</small>
+            <div *ngIf="uploadingImage" class="mt-2">
+              <div class="spinner-border spinner-border-sm text-primary" role="status">
+                <span class="visually-hidden">Subiendo...</span>
+              </div>
+              <small class="ms-2">Subiendo imagen...</small>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeEditModal()">Cancelar</button>
+        <button type="button" class="btn btn-primary" (click)="saveUser()">Guardar Cambios</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade" [class.show]="showEditModal" *ngIf="showEditModal"></div>
+
+<!-- Modal de Crear Usuario -->
+<div class="modal fade" [class.show]="showCreateModal" [style.display]="showCreateModal ? 'block' : 'none'" *ngIf="showCreateModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Crear Nuevo Usuario</h5>
+        <button type="button" class="btn-close" (click)="closeCreateModal()"></button>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="mb-3">
+            <label class="form-label">Nombre *</label>
+            <input type="text" class="form-control" [(ngModel)]="newUser.nombre" name="nombre" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Apellido *</label>
+            <input type="text" class="form-control" [(ngModel)]="newUser.apellido" name="apellido" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Email *</label>
+            <input type="email" class="form-control" [(ngModel)]="newUser.email" name="email" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Contraseña *</label>
+            <input type="password" class="form-control" [(ngModel)]="newUser.password" name="password" required>
+            <small class="text-muted">Mínimo 6 caracteres</small>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Rol *</label>
+            <select class="form-select" [(ngModel)]="newUser.rol" name="rol" required>
+              <option value="estudiante">Estudiante</option>
+              <option value="profesor">Profesor</option>
+              <option value="admin">Administrador</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Foto de Perfil</label>
+            <div class="text-center mb-2" *ngIf="imagePreviewCreate">
+              <img [src]="imagePreviewCreate" class="img-thumbnail" style="max-width: 150px; max-height: 150px; object-fit: cover;">
+            </div>
+            <input
+              type="file"
+              class="form-control"
+              accept="image/*"
+              (change)="onImageSelectedCreate($event)"
+              [disabled]="uploadingImage">
+            <small class="text-muted">Formatos: JPG, PNG, GIF, WEBP (Máx. 5MB)</small>
+            <div *ngIf="uploadingImage" class="mt-2">
+              <div class="spinner-border spinner-border-sm text-primary" role="status">
+                <span class="visually-hidden">Subiendo...</span>
+              </div>
+              <small class="ms-2">Subiendo imagen...</small>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeCreateModal()">Cancelar</button>
+        <button type="button" class="btn btn-primary" (click)="createUser()">Crear Usuario</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade" [class.show]="showCreateModal" *ngIf="showCreateModal"></div>
+
+<!-- Modal de Ver Detalles -->
+<div class="modal fade" [class.show]="showViewModal" [style.display]="showViewModal ? 'block' : 'none'" *ngIf="showViewModal">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Detalles del Usuario</h5>
+        <button type="button" class="btn-close" (click)="closeViewModal()"></button>
+      </div>
+      <div class="modal-body" *ngIf="selectedUser">
+        <div class="row">
+          <div class="col-md-4 text-center mb-3">
+            <div class="profile-image-large mb-3" *ngIf="selectedUser.fotoPerfil">
+              <img [src]="selectedUser.fotoPerfil" [alt]="selectedUser.nombre" class="img-fluid rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">
+            </div>
+            <div class="user-avatar-large mb-3" *ngIf="!selectedUser.fotoPerfil">
+              {{ selectedUser.nombre.charAt(0) }}{{ selectedUser.apellido.charAt(0) }}
+            </div>
+            <h4>{{ selectedUser.nombre }} {{ selectedUser.apellido }}</h4>
+            <span class="badge" [ngClass]="getRoleBadgeClass(selectedUser.rol)">
+              {{ getRoleLabel(selectedUser.rol) }}
+            </span>
+            <span class="badge ms-2" [ngClass]="selectedUser.activo ? 'bg-success' : 'bg-secondary'">
+              {{ selectedUser.activo ? 'Activo' : 'Inactivo' }}
+            </span>
+          </div>
+          <div class="col-md-8">
+            <div class="row mb-3">
+              <div class="col-12">
+                <strong><i class="fas fa-envelope"></i> Email:</strong>
+                <p>{{ selectedUser.email }}</p>
+              </div>
+            </div>
+            <div class="row mb-3">
+              <div class="col-6">
+                <strong><i class="fas fa-calendar"></i> Fecha de Registro:</strong>
+                <p>{{ selectedUser.fechaRegistro | date:'dd/MM/yyyy' }}</p>
+              </div>
+              <div class="col-6">
+                <strong><i class="fas fa-book"></i> Cursos:</strong>
+                <p *ngIf="selectedUser.rol === 'estudiante'">{{ selectedUser.cursosInscritos?.length || 0 }} inscritos</p>
+                <p *ngIf="selectedUser.rol === 'profesor'">{{ selectedUser.cursosAsignados?.length || 0 }} asignados</p>
+                <p *ngIf="selectedUser.rol === 'admin'">N/A</p>
+              </div>
+            </div>
+            <div class="row mb-3">
+              <div class="col-12">
+                <strong><i class="fas fa-fingerprint"></i> ID de Usuario:</strong>
+                <p class="text-muted small">{{ selectedUser.id }}</p>
+              </div>
+            </div>
+            <div class="row mb-3" *ngIf="selectedUser.fotoPerfil">
+              <div class="col-12">
+                <strong><i class="fas fa-image"></i> URL Foto de Perfil:</strong>
+                <p><a [href]="selectedUser.fotoPerfil" target="_blank" class="text-break">{{ selectedUser.fotoPerfil }}</a></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeViewModal()">Cerrar</button>
+        <button type="button" class="btn btn-primary" (click)="editUserFromView()">
+          <i class="fas fa-edit me-1"></i> Editar Usuario
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade" [class.show]="showViewModal" *ngIf="showViewModal"></div>

@@ -1,0 +1,306 @@
+<div class="crear-examen-container">
+  <div class="header">
+    <button class="btn-back" (click)="cancel()">
+      <i class="fas fa-arrow-left"></i> Volver
+    </button>
+    <h1>{{ isEdit ? 'Editar' : 'Crear' }} Examen</h1>
+    <p class="breadcrumb">{{ cursoNombre }} / {{ seccionNombre }}</p>
+  </div>
+
+  <form [formGroup]="examenForm" (ngSubmit)="onSubmit()" class="examen-form">
+    <!-- Información General -->
+    <div class="form-section">
+      <h2><i class="fas fa-info-circle"></i> Información General</h2>
+
+      <div class="form-group">
+        <label for="titulo">Título del Examen *</label>
+        <input
+          type="text"
+          id="titulo"
+          formControlName="titulo"
+          class="form-control"
+          placeholder="Ej: Examen Final - Evangelio de Juan">
+      </div>
+
+      <div class="form-group">
+        <label for="descripcion">Descripción</label>
+        <textarea
+          id="descripcion"
+          formControlName="descripcion"
+          class="form-control"
+          rows="3"
+          placeholder="Descripción opcional del examen"></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="fechaInicio">Fecha de Inicio *</label>
+          <input
+            type="datetime-local"
+            id="fechaInicio"
+            formControlName="fechaInicio"
+            class="form-control">
+        </div>
+
+        <div class="form-group">
+          <label for="fechaFin">Fecha de Fin *</label>
+          <input
+            type="datetime-local"
+            id="fechaFin"
+            formControlName="fechaFin"
+            class="form-control">
+        </div>
+      </div>
+    </div>
+
+    <!-- Configuración -->
+    <div class="form-section">
+      <h2><i class="fas fa-cog"></i> Configuración</h2>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="duracionMinutos">Duración (minutos) *</label>
+          <input
+            type="number"
+            id="duracionMinutos"
+            formControlName="duracionMinutos"
+            class="form-control"
+            min="1">
+        </div>
+
+        <div class="form-group">
+          <label for="intentosPermitidos">Intentos Permitidos *</label>
+          <input
+            type="number"
+            id="intentosPermitidos"
+            formControlName="intentosPermitidos"
+            class="form-control"
+            min="1">
+        </div>
+
+        <div class="form-group">
+          <label for="ponderacion">Ponderación (%) *</label>
+          <input
+            type="number"
+            id="ponderacion"
+            formControlName="ponderacion"
+            class="form-control"
+            min="0"
+            max="100">
+        </div>
+
+        <div class="form-group">
+          <label for="notaMinima">Nota Mínima (%) *</label>
+          <input
+            type="number"
+            id="notaMinima"
+            formControlName="notaMinima"
+            class="form-control"
+            min="0"
+            max="100">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group checkbox-group">
+          <label>
+            <input
+              type="checkbox"
+              formControlName="mezclarPreguntas">
+            <span>Mezclar Preguntas</span>
+          </label>
+        </div>
+
+        <div class="form-group checkbox-group">
+          <label>
+            <input
+              type="checkbox"
+              formControlName="mostrarRespuestas">
+            <span>Mostrar Respuestas Correctas</span>
+          </label>
+        </div>
+
+        <div class="form-group checkbox-group">
+          <label>
+            <input
+              type="checkbox"
+              formControlName="visible">
+            <span><i class="fas fa-eye"></i> Visible para estudiantes</span>
+          </label>
+          <small class="hint">Si está desmarcado, los estudiantes no verán este examen en el curso.</small>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group checkbox-group">
+          <label class="checkbox-examen-final">
+            <input
+              type="checkbox"
+              formControlName="esExamenFinal">
+            <span><i class="fas fa-star"></i> Este es el Examen Final del curso</span>
+          </label>
+          <small class="hint">Solo puede haber un examen final por curso. Esta opción le dará una ponderación separada en el cálculo de calificaciones.</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Preguntas -->
+    <div class="form-section preguntas-section">
+      <div class="section-header">
+        <h2><i class="fas fa-question-circle"></i> Preguntas ({{ preguntas.length }})</h2>
+        <div class="header-actions">
+          <input type="file" #fileInput accept=".xlsx,.xls" style="display: none" (change)="onFileSelected($event)">
+          <button type="button" class="btn-download-template" (click)="descargarPlantillaExcel()">
+            <i class="fas fa-download"></i> Descargar Plantilla
+          </button>
+          <button type="button" class="btn-import-excel" (click)="fileInput.click()">
+            <i class="fas fa-file-excel"></i> Importar desde Excel
+          </button>
+          <button type="button" class="btn-add-pregunta" (click)="addPregunta()">
+            <i class="fas fa-plus"></i> Agregar Pregunta
+          </button>
+        </div>
+      </div>
+
+      <div formArrayName="preguntas" class="preguntas-list">
+        <div *ngFor="let pregunta of preguntas.controls; let i = index"
+             [formGroupName]="i"
+             class="pregunta-card">
+
+          <div class="pregunta-header">
+            <span class="pregunta-number">Pregunta {{ i + 1 }}</span>
+            <button type="button" class="btn-remove" (click)="removePregunta(i)">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+
+          <div class="pregunta-body">
+            <div class="form-row">
+              <div class="form-group flex-2">
+                <label>Tipo de Pregunta</label>
+                <select
+                  formControlName="tipo"
+                  class="form-control"
+                  (change)="onTipoPreguntaChange(i)">
+                  <option *ngFor="let tipo of tiposPreguntas" [value]="tipo.value">
+                    {{ tipo.label }}
+                  </option>
+                </select>
+              </div>
+
+              <div class="form-group flex-1">
+                <label>Puntos</label>
+                <input
+                  type="number"
+                  formControlName="puntos"
+                  class="form-control"
+                  min="0">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Texto de la Pregunta</label>
+              <textarea
+                formControlName="texto"
+                class="form-control"
+                rows="2"
+                placeholder="Escriba aquí la pregunta"></textarea>
+            </div>
+
+            <!-- Opciones (para preguntas de selección múltiple y V/F) -->
+            <div *ngIf="mostrarOpciones(pregunta.get('tipo')?.value)" class="opciones-container">
+              <div class="opciones-header">
+                <label>Opciones</label>
+                <button
+                  *ngIf="pregunta.get('tipo')?.value !== 'verdadero_falso'"
+                  type="button"
+                  class="btn-add-opcion"
+                  (click)="addOpcion(i)">
+                  <i class="fas fa-plus"></i> Agregar Opción
+                </button>
+              </div>
+
+              <div formArrayName="opciones" class="opciones-list">
+                <div *ngFor="let opcion of getOpciones(i).controls; let j = index"
+                     [formGroupName]="j"
+                     class="opcion-item">
+
+                  <div class="opcion-checkbox">
+                    <input
+                      type="checkbox"
+                      formControlName="esCorrecta"
+                      [id]="'correcta-' + i + '-' + j">
+                    <label [for]="'correcta-' + i + '-' + j" class="checkbox-label">Correcta</label>
+                  </div>
+
+                  <input
+                    type="text"
+                    formControlName="texto"
+                    class="form-control opcion-input"
+                    placeholder="Texto de la opción"
+                    [readonly]="pregunta.get('tipo')?.value === 'verdadero_falso'">
+
+                  <button
+                    *ngIf="pregunta.get('tipo')?.value !== 'verdadero_falso'"
+                    type="button"
+                    class="btn-remove-opcion"
+                    (click)="removeOpcion(i, j)">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Respuesta Corta (para preguntas de respuesta corta y completar) -->
+            <div *ngIf="mostrarRespuestaCorta(pregunta.get('tipo')?.value)" class="form-group">
+              <label>Respuesta Correcta</label>
+              <input
+                type="text"
+                formControlName="respuestaCorrecta"
+                class="form-control"
+                placeholder="Escriba la respuesta correcta">
+              <small class="form-text">
+                La respuesta del estudiante se comparará con este texto (sin distinción de mayúsculas/minúsculas)
+              </small>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="preguntas.length === 0" class="empty-preguntas">
+          <i class="fas fa-question-circle"></i>
+          <p>No hay preguntas agregadas</p>
+          <button type="button" class="btn-add-pregunta" (click)="addPregunta()">
+            <i class="fas fa-plus"></i> Agregar Primera Pregunta
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Estado del Formulario (Debug) -->
+    <div class="form-debug" *ngIf="examenForm.invalid" style="background: #fff3cd; border: 1px solid #ffc107; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+      <h4 style="color: #856404; margin: 0 0 10px 0;"><i class="fas fa-exclamation-triangle"></i> Campos Requeridos Faltantes:</h4>
+      <ul style="margin: 0; color: #856404;">
+        <li *ngIf="examenForm.get('titulo')?.invalid">✗ Título del examen</li>
+        <li *ngIf="examenForm.get('fechaInicio')?.invalid">✗ Fecha de inicio</li>
+        <li *ngIf="examenForm.get('fechaFin')?.invalid">✗ Fecha de fin</li>
+        <li *ngIf="examenForm.get('duracionMinutos')?.invalid">✗ Duración en minutos</li>
+        <li *ngIf="examenForm.get('intentosPermitidos')?.invalid">✗ Intentos permitidos</li>
+        <li *ngIf="examenForm.get('ponderacion')?.invalid">✗ Ponderación</li>
+        <li *ngIf="examenForm.get('notaMinima')?.invalid">✗ Nota mínima</li>
+        <li *ngIf="preguntas.length === 0">✗ Debe agregar al menos 1 pregunta</li>
+        <li *ngIf="hasInvalidPreguntas()">✗ Algunas preguntas tienen campos incompletos</li>
+      </ul>
+    </div>
+
+    <!-- Acciones -->
+    <div class="form-actions">
+      <button type="button" class="btn-cancel" (click)="cancel()" [disabled]="loading">
+        Cancelar
+      </button>
+      <button type="submit" class="btn-submit" [disabled]="loading || examenForm.invalid">
+        <i class="fas" [class.fa-spinner]="loading" [class.fa-spin]="loading" [class.fa-save]="!loading"></i>
+        {{ loading ? 'Guardando...' : (isEdit ? 'Actualizar' : 'Crear') }} Examen
+      </button>
+    </div>
+  </form>
+</div>

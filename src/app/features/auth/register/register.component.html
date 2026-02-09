@@ -1,0 +1,130 @@
+<div class="register-container">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-6 col-lg-5">
+        <div class="register-card">
+          <!-- Logo -->
+          <div class="text-center mb-4">
+            <img src="assets/img/logo.svg" alt="Logo" height="60" class="mb-3">
+            <h2 class="mb-2">Crear Usuario</h2>
+            <p class="text-muted">Escuela Bíblica CAVEVID</p>
+          </div>
+
+          <!-- Mensajes de error/éxito -->
+          <div class="alert alert-danger" *ngIf="errorMessage">
+            <i class="fas fa-exclamation-circle"></i> {{ errorMessage }}
+          </div>
+
+          <div class="alert alert-success" *ngIf="successMessage">
+            {{ successMessage }}
+          </div>
+
+          <!-- Formulario -->
+          <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+            <!-- Nombre -->
+            <div class="mb-3">
+              <label for="nombre" class="form-label">Nombre</label>
+              <input 
+                type="text" 
+                class="form-control" 
+                id="nombre" 
+                formControlName="nombre"
+                [class.is-invalid]="registerForm.get('nombre')?.invalid && registerForm.get('nombre')?.touched">
+              <div class="invalid-feedback">
+                {{ getFieldError('nombre') }}
+              </div>
+            </div>
+
+            <!-- Apellido -->
+            <div class="mb-3">
+              <label for="apellido" class="form-label">Apellido</label>
+              <input 
+                type="text" 
+                class="form-control" 
+                id="apellido" 
+                formControlName="apellido"
+                [class.is-invalid]="registerForm.get('apellido')?.invalid && registerForm.get('apellido')?.touched">
+              <div class="invalid-feedback">
+                {{ getFieldError('apellido') }}
+              </div>
+            </div>
+
+            <!-- Email -->
+            <div class="mb-3">
+              <label for="email" class="form-label">Email</label>
+              <input 
+                type="email" 
+                class="form-control" 
+                id="email" 
+                formControlName="email"
+                [class.is-invalid]="registerForm.get('email')?.invalid && registerForm.get('email')?.touched">
+              <div class="invalid-feedback">
+                {{ getFieldError('email') }}
+              </div>
+            </div>
+
+            <!-- Rol -->
+            <div class="mb-3">
+              <label for="rol" class="form-label">Rol</label>
+              <select 
+                class="form-select" 
+                id="rol" 
+                formControlName="rol">
+                <option value="estudiante">Estudiante</option>
+                <option value="profesor">Profesor</option>
+                <option value="admin">Administrador</option>
+              </select>
+              <div class="form-text">
+                <i class="fas fa-info-circle"></i> Selecciona el rol del usuario
+              </div>
+            </div>
+
+            <!-- Contraseña -->
+            <div class="mb-3">
+              <label for="password" class="form-label">Contraseña</label>
+              <input 
+                type="password" 
+                class="form-control" 
+                id="password" 
+                formControlName="password"
+                [class.is-invalid]="registerForm.get('password')?.invalid && registerForm.get('password')?.touched">
+              <div class="invalid-feedback">
+                {{ getFieldError('password') }}
+              </div>
+            </div>
+
+            <!-- Confirmar Contraseña -->
+            <div class="mb-3">
+              <label for="confirmPassword" class="form-label">Confirmar Contraseña</label>
+              <input 
+                type="password" 
+                class="form-control" 
+                id="confirmPassword" 
+                formControlName="confirmPassword"
+                [class.is-invalid]="(registerForm.get('confirmPassword')?.invalid || registerForm.hasError('passwordMismatch')) && registerForm.get('confirmPassword')?.touched">
+              <div class="invalid-feedback">
+                {{ getFieldError('confirmPassword') }}
+              </div>
+            </div>
+
+            <!-- Botón Submit -->
+            <button 
+              type="submit" 
+              class="btn btn-primary w-100 mb-3"
+              [disabled]="loading">
+              <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+              {{ loading ? 'Creando...' : 'Crear Usuario' }}
+            </button>
+
+            <!-- Link al Login -->
+            <div class="text-center">
+              <a routerLink="/login" class="text-decoration-none">
+                <i class="fas fa-arrow-left"></i> Volver al Login
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

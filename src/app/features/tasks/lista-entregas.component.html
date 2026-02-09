@@ -1,0 +1,175 @@
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+  <div class="container-fluid">
+    <button class="btn btn-outline-light me-2" (click)="goBack()">
+      <i class="fas fa-arrow-left"></i> Volver
+    </button>
+    <span class="navbar-brand mb-0 h1" style="cursor: pointer;" (click)="goToDashboard()">
+      <i class="fas fa-list-check"></i> Entregas de Tarea
+    </span>
+    <button class="btn btn-outline-light" (click)="logout()">
+      <i class="fas fa-sign-out-alt"></i> Salir
+    </button>
+  </div>
+</nav>
+
+<!-- Loading -->
+<div class="loading-container" *ngIf="loading">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Cargando...</span>
+  </div>
+  <p class="mt-3">Cargando entregas...</p>
+</div>
+
+<!-- Main Content -->
+<div class="container-fluid mt-4" *ngIf="!loading && tarea">
+  <!-- Información de la Tarea -->
+  <div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+      <div class="d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+          <i class="fas fa-clipboard-list"></i> {{ tarea.titulo }}
+        </h5>
+        <span class="badge bg-light text-dark">{{ tarea.ponderacion }}%</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-8">
+          <p><strong>Descripción:</strong> {{ tarea.descripcion || 'Sin descripción' }}</p>
+        </div>
+        <div class="col-md-4">
+          <p><strong>Fecha límite:</strong> {{ formatDate(tarea.fechaFin) }}</p>
+          <p><strong>Tipo de entrega:</strong>
+            <span class="badge bg-secondary">{{ tarea.tipoEntrega }}</span>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estadísticas -->
+  <div class="row mb-4">
+    <div class="col-md-3 col-sm-6 mb-3">
+      <div class="card stats-card bg-primary text-white">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="mb-0">Total</h6>
+              <h3 class="mb-0">{{ totalEntregas }}</h3>
+            </div>
+            <i class="fas fa-users fa-2x opacity-50"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6 mb-3">
+      <div class="card stats-card bg-success text-white">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="mb-0">Calificadas</h6>
+              <h3 class="mb-0">{{ entregasCalificadas }}</h3>
+            </div>
+            <i class="fas fa-check-circle fa-2x opacity-50"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6 mb-3">
+      <div class="card stats-card bg-warning text-white">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="mb-0">Pendientes</h6>
+              <h3 class="mb-0">{{ entregasPendientes }}</h3>
+            </div>
+            <i class="fas fa-clock fa-2x opacity-50"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6 mb-3">
+      <div class="card stats-card bg-info text-white">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="mb-0">Promedio</h6>
+              <h3 class="mb-0">{{ promedioCalificacion | number:'1.1-1' }}</h3>
+            </div>
+            <i class="fas fa-chart-line fa-2x opacity-50"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lista de Entregas -->
+  <div class="card">
+    <div class="card-header bg-secondary text-white">
+      <h5 class="mb-0">
+        <i class="fas fa-list"></i> Entregas Recibidas
+      </h5>
+    </div>
+    <div class="card-body p-0">
+      <!-- Empty State -->
+      <div class="text-center py-5" *ngIf="entregas.length === 0">
+        <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+        <h5 class="text-muted">No hay entregas aún</h5>
+        <p class="text-muted">Cuando los estudiantes entreguen sus tareas, aparecerán aquí.</p>
+      </div>
+
+      <!-- Table -->
+      <div class="table-responsive" *ngIf="entregas.length > 0">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Estudiante</th>
+              <th>Fecha Entrega</th>
+              <th class="text-center">Estado</th>
+              <th class="text-center">Calificación</th>
+              <th class="text-center">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let entrega of entregas">
+              <td>
+                <div>
+                  <strong>{{ entrega.estudianteNombre }}</strong>
+                  <br>
+                  <small class="text-muted">{{ entrega.estudianteEmail }}</small>
+                </div>
+              </td>
+              <td>{{ formatDate(entrega.fechaEntrega) }}</td>
+              <td class="text-center">
+                <span class="badge" [ngClass]="getEstadoBadgeClass(entrega.estado)">
+                  <i class="fas" [ngClass]="getEstadoIcon(entrega.estado)"></i>
+                  {{ entrega.estado }}
+                </span>
+              </td>
+              <td class="text-center">
+                <span *ngIf="entrega.calificacion !== undefined && entrega.calificacion !== null"
+                      class="badge bg-success fs-6">
+                  {{ entrega.calificacion }}/100
+                </span>
+                <span *ngIf="entrega.calificacion === undefined || entrega.calificacion === null"
+                      class="text-muted">
+                  <i class="fas fa-minus"></i>
+                </span>
+              </td>
+              <td class="text-center">
+                <button
+                  class="btn btn-sm"
+                  [ngClass]="entrega.estado === 'calificada' ? 'btn-outline-primary' : 'btn-primary'"
+                  (click)="calificarEntrega(entrega.id)">
+                  <i class="fas" [ngClass]="entrega.estado === 'calificada' ? 'fa-edit' : 'fa-star'"></i>
+                  {{ entrega.estado === 'calificada' ? 'Editar' : 'Calificar' }}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

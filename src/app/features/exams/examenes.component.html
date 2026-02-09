@@ -1,0 +1,144 @@
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+  <div class="container-fluid">
+    <button class="btn btn-outline-light me-2" (click)="goBack()">
+      <i class="fas fa-arrow-left"></i> Volver
+    </button>
+    <span class="navbar-brand mb-0 h1" style="cursor: pointer;" (click)="goToDashboard()">
+      <i class="fas fa-file-alt"></i> Gestión de Exámenes
+    </span>
+    <button class="btn btn-outline-light" (click)="logout()">
+      <i class="fas fa-sign-out-alt"></i> Salir
+    </button>
+  </div>
+</nav>
+
+<!-- Loading -->
+<div class="loading-container" *ngIf="loading">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Cargando...</span>
+  </div>
+  <p class="mt-3">Cargando exámenes...</p>
+</div>
+
+<!-- Main Content -->
+<div class="container-fluid mt-4" *ngIf="!loading && seccion">
+  <!-- Header -->
+  <div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+      <div class="d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+          <i class="fas fa-book-open"></i> {{ seccion.titulo }}
+        </h5>
+        <button class="btn btn-success" (click)="createExam()">
+          <i class="fas fa-plus"></i> Crear Examen
+        </button>
+      </div>
+    </div>
+    <div class="card-body">
+      <p class="mb-0">{{ seccion.descripcion || 'Sin descripción' }}</p>
+    </div>
+  </div>
+
+  <!-- Exámenes List -->
+  <div class="row">
+    <!-- Empty State -->
+    <div class="col-12" *ngIf="examenes.length === 0">
+      <div class="card">
+        <div class="card-body text-center py-5">
+          <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+          <h5 class="text-muted">No hay exámenes creados</h5>
+          <p class="text-muted">Crea tu primer examen para comenzar.</p>
+          <button class="btn btn-primary" (click)="createExam()">
+            <i class="fas fa-plus"></i> Crear Primer Examen
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Exámenes Cards -->
+    <div class="col-md-6 col-lg-4 mb-4" *ngFor="let examen of examenes">
+      <div class="card h-100 exam-card">
+        <div class="card-header" [ngClass]="isExamActive(examen) ? 'bg-success' : 'bg-secondary'" class="text-white">
+          <div class="d-flex justify-content-between align-items-center">
+            <h6 class="mb-0">
+              <i class="fas fa-file-alt"></i> {{ examen.titulo }}
+            </h6>
+            <span class="badge" [ngClass]="isExamActive(examen) ? 'bg-light text-dark' : 'bg-dark'">
+              <i class="fas" [ngClass]="isExamActive(examen) ? 'fa-unlock' : 'fa-lock'"></i>
+              {{ isExamActive(examen) ? 'Activo' : 'Cerrado' }}
+            </span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p class="card-text text-muted small">{{ examen.descripcion || 'Sin descripción' }}</p>
+
+          <div class="exam-details">
+            <div class="detail-row">
+              <i class="fas fa-calendar-alt text-primary"></i>
+              <strong>Inicio:</strong> {{ formatDate(examen.fechaInicio) }}
+            </div>
+            <div class="detail-row">
+              <i class="fas fa-calendar-times text-danger"></i>
+              <strong>Fin:</strong> {{ formatDate(examen.fechaFin) }}
+            </div>
+            <div class="detail-row">
+              <i class="fas fa-clock text-info"></i>
+              <strong>Duración:</strong> {{ examen.duracionMinutos }} minutos
+            </div>
+            <div class="detail-row">
+              <i class="fas fa-redo text-warning"></i>
+              <strong>Intentos:</strong> {{ examen.intentosPermitidos }}
+            </div>
+            <div class="detail-row">
+              <i class="fas fa-question-circle text-secondary"></i>
+              <strong>Preguntas:</strong> {{ examen.preguntas.length }}
+            </div>
+            <div class="detail-row">
+              <i class="fas fa-percentage text-success"></i>
+              <strong>Ponderación:</strong> {{ examen.ponderacion }}%
+            </div>
+            <div class="detail-row">
+              <i class="fas fa-check-circle text-success"></i>
+              <strong>Nota mínima:</strong> {{ examen.notaMinima }}%
+            </div>
+          </div>
+
+          <div class="mt-3">
+            <span class="badge bg-info me-1" *ngIf="examen.mezclarPreguntas">
+              <i class="fas fa-random"></i> Aleatorio
+            </span>
+            <span class="badge bg-success me-1" *ngIf="examen.mostrarRespuestas">
+              <i class="fas fa-eye"></i> Muestra respuestas
+            </span>
+            <span class="badge me-1" [class.bg-success]="examen.visible !== false" [class.bg-secondary]="examen.visible === false">
+              <i class="fas" [class.fa-eye]="examen.visible !== false" [class.fa-eye-slash]="examen.visible === false"></i>
+              {{ examen.visible !== false ? 'Visible' : 'Oculto' }}
+            </span>
+          </div>
+        </div>
+        <div class="card-footer bg-light">
+          <div class="btn-group w-100" role="group">
+            <button
+              class="btn btn-sm"
+              [class.btn-success]="examen.visible !== false"
+              [class.btn-secondary]="examen.visible === false"
+              (click)="toggleVisibility(examen)"
+              title="Cambiar visibilidad">
+              <i class="fas" [class.fa-eye]="examen.visible !== false" [class.fa-eye-slash]="examen.visible === false"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-primary" (click)="editExam(examen.id)" title="Editar">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-info" (click)="viewAttempts(examen.id)" title="Ver Intentos">
+              <i class="fas fa-list"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-danger" (click)="deleteExam(examen)" title="Eliminar">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

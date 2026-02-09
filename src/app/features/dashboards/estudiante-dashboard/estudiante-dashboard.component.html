@@ -1,0 +1,127 @@
+<div class="dashboard-container">
+  <!-- Header -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" style="cursor: pointer;" (click)="goToDashboard()">
+        <img src="assets/img/logo.svg" alt="Logo" height="40">
+      </a>
+      <span class="navbar-text text-white me-3">
+        {{ userName }}
+      </span>
+      <button class="btn btn-outline-light btn-sm" (click)="logout()">
+        <i class="fas fa-sign-out-alt"></i> Salir
+      </button>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="container py-5">
+    <!-- Welcome Message -->
+    <div class="row mb-5">
+      <div class="col-12">
+        <div class="welcome-card p-4 rounded shadow-sm bg-primary text-white">
+          <h1 class="mb-3">¡Bienvenido, {{ userName }}! 🎓</h1>
+          <p class="mb-0 fs-5">Continúa tu aprendizaje en la Escuela Bíblica CAVEVID</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cursos -->
+    <div class="row mb-4">
+      <div class="col-12 d-flex justify-content-between align-items-center">
+        <h2 class="mb-0">Mis Cursos</h2>
+        <div class="btn-group">
+          <button class="btn btn-outline-success" (click)="irASolicitarInscripcion()">
+            <i class="fas fa-plus-circle"></i> Solicitar inscripción
+          </button>
+          <button class="btn btn-outline-info" (click)="verMisSolicitudes()">
+            <i class="fas fa-history"></i> Mis solicitudes
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="row" *ngIf="loading">
+      <div class="col-12">
+        <div class="text-center py-5">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
+          </div>
+          <p class="mt-3 text-muted">Cargando tus cursos...</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4" *ngIf="!loading">
+      <div class="col-md-6 col-lg-4" *ngFor="let curso of cursos">
+        <div class="card h-100 shadow-sm curso-card">
+          <img [src]="curso.imagen || 'assets/img/portfolio/1.png'" class="card-img-top" [alt]="curso.titulo" style="height: 200px; object-fit: cover;">
+          <div class="card-body">
+            <h5 class="card-title">{{ curso.titulo }}</h5>
+            <div class="card-text text-muted" style="min-height: 40px;">
+              <p class="mb-1">{{ getDescripcion(curso) }}</p>
+              <a *ngIf="shouldShowToggle(curso.descripcion)"
+                 href="javascript:void(0)"
+                 class="text-primary small"
+                 (click)="toggleDescripcion(curso.id)">
+                {{ isExpanded(curso.id) ? 'Ver menos' : 'Ver más' }}
+              </a>
+            </div>
+            <p class="card-text text-muted mb-2">
+              <i class="fas fa-user-tie"></i> {{ curso.profesorNombre }}
+            </p>
+
+            <!-- Mostrar tareas solo si hay al menos una -->
+            <p class="card-text text-muted mb-2" *ngIf="curso.totalTareas > 0">
+              <i class="fas fa-tasks"></i> {{ curso.tareasEntregadas }}/{{ curso.totalTareas }} tareas entregadas
+            </p>
+
+            <!-- Mostrar exámenes solo si hay al menos uno -->
+            <p class="card-text text-muted mb-2" *ngIf="curso.totalExamenes > 0">
+              <i class="fas fa-clipboard-check"></i> {{ curso.examenesRealizados }}/{{ curso.totalExamenes }} exámenes realizados
+            </p>
+
+            <!-- Barra de progreso -->
+            <div class="mb-3">
+              <div class="d-flex justify-content-between mb-1">
+                <small>Progreso del curso</small>
+                <small><strong>{{ curso.progreso }}%</strong></small>
+              </div>
+              <div class="progress" style="height: 8px;">
+                <div class="progress-bar"
+                     [class.bg-success]="curso.progreso >= 75"
+                     [class.bg-info]="curso.progreso >= 50 && curso.progreso < 75"
+                     [class.bg-warning]="curso.progreso >= 25 && curso.progreso < 50"
+                     [class.bg-danger]="curso.progreso < 25"
+                     role="progressbar"
+                     [style.width.%]="curso.progreso"
+                     [attr.aria-valuenow]="curso.progreso"
+                     aria-valuemin="0"
+                     aria-valuemax="100"></div>
+              </div>
+            </div>
+
+            <button class="btn btn-primary w-100" (click)="verCurso(curso.id)">
+              <i class="fas fa-book-open"></i> Ir al curso
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="row" *ngIf="cursos.length === 0 && !loading">
+      <div class="col-12">
+        <div class="text-center py-5">
+          <i class="fas fa-book-open fa-4x text-muted mb-3"></i>
+          <h4 class="text-muted">No tienes cursos inscritos</h4>
+          <p class="text-muted">¡Solicita inscripción a un curso para comenzar tu aprendizaje!</p>
+          <button class="btn btn-primary mt-3" (click)="irASolicitarInscripcion()">
+            <i class="fas fa-plus-circle"></i> Solicitar inscripción
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

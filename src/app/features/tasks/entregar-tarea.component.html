@@ -1,0 +1,223 @@
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-success">
+  <div class="container-fluid">
+    <button class="btn btn-outline-light me-2" (click)="goBack()">
+      <i class="fas fa-arrow-left"></i> Volver
+    </button>
+    <span class="navbar-brand mb-0 h1" style="cursor: pointer;" (click)="goToDashboard()">
+      <i class="fas fa-tasks"></i> Entregar Tarea
+    </span>
+    <button class="btn btn-outline-light" (click)="logout()">
+      <i class="fas fa-sign-out-alt"></i> Salir
+    </button>
+  </div>
+</nav>
+
+<div class="container-fluid mt-4" *ngIf="tarea && leccion">
+  <div class="row">
+    <div class="col-12">
+      <!-- Información de la Tarea -->
+      <div class="card mb-3">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+          <div>
+            <h5 class="mb-0"><i class="fas fa-clipboard-list"></i> {{ tarea.titulo }}</h5>
+            <small class="opacity-75">{{ leccion.titulo }}</small>
+          </div>
+          <span class="badge bg-light text-primary fs-6">{{ tarea.ponderacion }}%</span>
+        </div>
+        <div class="card-body py-2">
+          <!-- Info compacta en línea -->
+          <div class="compact-info mb-2">
+            <span class="info-item">
+              <i class="fas fa-calendar-check text-primary"></i>
+              <strong>Entrega:</strong> <span [class.text-danger]="isOverdue()">{{ formatDate(tarea.fechaFin) }}</span>
+            </span>
+            <span class="info-item">
+              <i class="fas fa-tag text-success"></i>
+              {{ getTipoEntregaText(tarea.tipoEntrega) }}
+            </span>
+            <span class="info-item" *ngIf="tarea.tamanoMaximo">
+              <i class="fas fa-file-alt text-info"></i>
+              Max: {{ tarea.tamanoMaximo }} MB
+            </span>
+          </div>
+
+          <!-- Detalles collapsibles -->
+          <details class="mt-2">
+            <summary class="cursor-pointer text-primary"><i class="fas fa-info-circle"></i> Ver instrucciones completas</summary>
+            <div class="mt-2 p-2 bg-light rounded">
+              <p class="mb-2"><strong>Descripción:</strong> {{ tarea.descripcion || 'Sin descripción' }}</p>
+              <p class="mb-0" style="white-space: pre-wrap;"><strong>Instrucciones:</strong><br>{{ tarea.instrucciones || 'Sin instrucciones específicas' }}</p>
+              <p class="mb-0 mt-2" *ngIf="tarea.archivosPermitidos && tarea.archivosPermitidos.length > 0">
+                <strong>Formatos permitidos:</strong> {{ tarea.archivosPermitidos.join(', ') }}
+              </p>
+            </div>
+          </details>
+        </div>
+      </div>
+
+      <!-- Alertas de estado -->
+      <div class="alert alert-warning" *ngIf="getStatusMessage()">
+        <i class="fas fa-exclamation-triangle"></i> {{ getStatusMessage() }}
+      </div>
+
+      <!-- Calificación (si ya está calificada) -->
+      <div class="card mb-4 border-success" *ngIf="entrega && entrega.estado === 'calificada'">
+        <div class="card-header bg-success text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-star"></i> Calificación
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <h3 class="text-success">{{ entrega.calificacion }}/100</h3>
+              <p class="text-muted">
+                Puntos ponderados: {{ (entrega.calificacion! * tarea.ponderacion / 100).toFixed(2) }}
+              </p>
+            </div>
+            <div class="col-md-6">
+              <h6>Retroalimentación del profesor:</h6>
+              <p style="white-space: pre-wrap;">{{ entrega.retroalimentacion || 'Sin comentarios' }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formulario de Entrega -->
+      <div class="card mb-3" *ngIf="canSubmit()">
+        <div class="card-header bg-success text-white py-2">
+          <h6 class="mb-0">
+            <i class="fas fa-paper-plane"></i> {{ entrega ? 'Modificar Entrega' : 'Nueva Entrega' }}
+          </h6>
+        </div>
+        <div class="card-body py-3">
+          <form>
+            <!-- Texto -->
+            <div class="mb-3" *ngIf="tarea.tipoEntrega === 'texto' || tarea.tipoEntrega === 'ambos'">
+              <label class="form-label fw-bold small">
+                <i class="fas fa-align-left"></i> Respuesta en Texto
+                <span class="text-danger" *ngIf="tarea.tipoEntrega === 'texto' || tarea.tipoEntrega === 'ambos'">*</span>
+              </label>
+              <textarea
+                class="form-control form-control-sm"
+                [(ngModel)]="contenidoTexto"
+                name="contenidoTexto"
+                rows="6"
+                placeholder="Escribe tu respuesta aquí..."
+                [required]="tarea.tipoEntrega === 'texto' || tarea.tipoEntrega === 'ambos'"></textarea>
+              <small class="text-muted">{{ contenidoTexto.length }} caracteres</small>
+            </div>
+
+            <!-- Archivos -->
+            <div class="mb-3" *ngIf="tarea.tipoEntrega === 'archivo' || tarea.tipoEntrega === 'ambos'">
+              <label class="form-label fw-bold small">
+                <i class="fas fa-file-upload"></i> Archivos Adjuntos
+                <span class="text-danger" *ngIf="tarea.tipoEntrega === 'archivo' || tarea.tipoEntrega === 'ambos'">*</span>
+              </label>
+
+              <!-- Botón de subir -->
+              <div class="mb-2">
+                <input
+                  type="file"
+                  #fileInput
+                  (change)="onFileSelected($event)"
+                  style="display: none">
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-primary"
+                  (click)="fileInput.click()"
+                  [disabled]="uploadingFile">
+                  <span *ngIf="uploadingFile" class="spinner-border spinner-border-sm me-1"></span>
+                  <i *ngIf="!uploadingFile" class="fas fa-cloud-upload-alt me-1"></i>
+                  {{ uploadingFile ? 'Subiendo...' : 'Subir Archivo' }}
+                </button>
+              </div>
+
+              <!-- Lista de archivos compacta -->
+              <div *ngIf="archivos.length > 0" class="mb-2">
+                <small class="text-muted">{{ archivos.length }} archivo(s):</small>
+                <ul class="list-group list-group-sm mt-1">
+                  <li class="list-group-item py-1 px-2 d-flex justify-content-between align-items-center" *ngFor="let archivo of archivos; let i = index">
+                    <small class="text-truncate">
+                      <i class="fas fa-file me-1"></i>
+                      <a [href]="archivo" target="_blank">Archivo {{ i + 1 }}</a>
+                    </small>
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline-danger py-0 px-1"
+                      (click)="removeFile(i)"
+                      [disabled]="uploadingFile || loading">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Botones -->
+            <div class="d-flex justify-content-end gap-2">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                (click)="goBack()"
+                [disabled]="loading || uploadingFile">
+                Cancelar
+              </button>
+              <button
+                type="button"
+                class="btn btn-success"
+                (click)="submitTask()"
+                [disabled]="loading || uploadingFile">
+                <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+                <i *ngIf="!loading" class="fas fa-paper-plane me-2"></i>
+                {{ entrega ? 'Actualizar Entrega' : 'Entregar Tarea' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Entrega actual (solo vista) -->
+      <div class="card mb-3" *ngIf="entrega && !canSubmit() && entrega.estado !== 'calificada'">
+        <div class="card-header bg-info text-white py-2">
+          <h6 class="mb-0">
+            <i class="fas fa-check-circle"></i> Entrega completada
+            <span class="badge bg-light text-info ms-2">{{ entrega.estado }}</span>
+            <small class="ms-2 opacity-75">{{ formatDate(entrega.fechaEntrega) }}</small>
+          </h6>
+        </div>
+        <div class="card-body py-2">
+          <!-- Texto entregado -->
+          <div class="mb-2" *ngIf="entrega.contenidoTexto">
+            <small class="text-muted"><strong>Respuesta:</strong></small>
+            <div class="border p-2 bg-light rounded small">
+              <p class="mb-0" style="white-space: pre-wrap;">{{ entrega.contenidoTexto }}</p>
+            </div>
+          </div>
+
+          <!-- Archivos entregados -->
+          <div *ngIf="entrega.archivos && entrega.archivos.length > 0">
+            <small class="text-muted"><strong>Archivos ({{ entrega.archivos.length }}):</strong></small>
+            <ul class="list-group list-group-sm mt-1">
+              <li class="list-group-item py-1 px-2" *ngFor="let archivo of entrega.archivos; let i = index">
+                <i class="fas fa-file me-1"></i>
+                <a [href]="archivo" target="_blank" class="small">Archivo {{ i + 1 }}</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading state -->
+<div class="container-fluid mt-4" *ngIf="!tarea || !leccion">
+  <div class="text-center">
+    <div class="spinner-border text-success" role="status">
+      <span class="visually-hidden">Cargando...</span>
+    </div>
+    <p class="mt-3">Cargando tarea...</p>
+  </div>
+</div>

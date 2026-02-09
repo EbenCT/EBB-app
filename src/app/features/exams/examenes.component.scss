@@ -1,0 +1,87 @@
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+}
+
+.exam-card {
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0,0,0,.1);
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0,0,0,.15);
+  }
+
+  .card-header {
+    border-bottom: none;
+
+    h6 {
+      font-weight: 600;
+    }
+  }
+
+  .card-body {
+    padding: 1.25rem;
+  }
+
+  .card-footer {
+    border-top: 1px solid #dee2e6;
+  }
+}
+
+.exam-details {
+  font-size: 0.9rem;
+
+  .detail-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0;
+    border-bottom: 1px solid #f0f0f0;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    i {
+      width: 20px;
+      text-align: center;
+    }
+
+    strong {
+      min-width: 100px;
+      color: #495057;
+    }
+  }
+}
+
+.btn-group {
+  .btn {
+    transition: all 0.2s;
+
+    &:hover {
+      transform: scale(1.05);
+    }
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .exam-card {
+    margin-bottom: 1rem;
+  }
+
+  .exam-details {
+    font-size: 0.85rem;
+
+    .detail-row {
+      strong {
+        min-width: 80px;
+      }
+    }
+  }
+}

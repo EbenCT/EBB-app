@@ -1,0 +1,479 @@
+.tomar-examen-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.exam-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+
+  .exam-info {
+    flex: 1;
+
+    h1 {
+      margin: 0 0 0.5rem 0;
+      color: #333;
+    }
+
+    .exam-description {
+      color: #666;
+      margin-bottom: 1rem;
+    }
+
+    .exam-meta {
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+
+      span {
+        color: #666;
+        font-size: 0.9rem;
+
+        i {
+          margin-right: 0.5rem;
+          color: #4a90e2;
+        }
+      }
+    }
+  }
+
+  .timer-container {
+    min-width: 150px;
+    padding: 1.5rem;
+    border-radius: 8px;
+    text-align: center;
+    transition: all 0.3s;
+
+    &.normal {
+      background: #e8f5e9;
+      border: 2px solid #4caf50;
+      color: #2e7d32;
+    }
+
+    &.warning {
+      background: #fff3e0;
+      border: 2px solid #ff9800;
+      color: #e65100;
+    }
+
+    &.critical {
+      background: #ffebee;
+      border: 2px solid #f44336;
+      color: #c62828;
+      animation: pulse 1s infinite;
+    }
+
+    i {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .timer-display {
+      font-size: 2rem;
+      font-weight: bold;
+      font-family: 'Courier New', monospace;
+    }
+
+    .timer-label {
+      font-size: 0.8rem;
+      margin-top: 0.25rem;
+      opacity: 0.8;
+    }
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.progress-bar-container {
+  background: white;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1.5rem;
+
+  .progress-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    color: #666;
+  }
+
+  .progress-bar {
+    height: 8px;
+    background: #e0e0e0;
+    border-radius: 4px;
+    overflow: hidden;
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4a90e2, #357abd);
+      transition: width 0.3s ease;
+    }
+  }
+}
+
+.question-navigation {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+
+  .nav-label {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 1rem;
+  }
+
+  .nav-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+
+    .nav-btn {
+      width: 40px;
+      height: 40px;
+      border: 2px solid #ddd;
+      background: white;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-weight: 600;
+      color: #666;
+
+      &:hover {
+        border-color: #4a90e2;
+        background: #f0f7ff;
+      }
+
+      &.active {
+        background: #4a90e2;
+        border-color: #4a90e2;
+        color: white;
+      }
+
+      &.answered {
+        background: #e8f5e9;
+        border-color: #4caf50;
+        color: #2e7d32;
+      }
+
+      &.active.answered {
+        background: #4a90e2;
+        border-color: #4a90e2;
+        color: white;
+      }
+    }
+  }
+}
+
+.exam-form {
+  .question-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+
+    .question-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid #4a90e2;
+      margin-bottom: 1.5rem;
+
+      .question-number {
+        font-weight: 600;
+        color: #4a90e2;
+      }
+
+      .question-points {
+        background: #4a90e2;
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.9rem;
+      }
+    }
+
+    .question-text {
+      font-size: 1.1rem;
+      color: #333;
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+    }
+  }
+}
+
+.options-container {
+  .multiple-hint {
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 0.75rem 1rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+
+    i {
+      margin-right: 0.5rem;
+    }
+  }
+
+  .option-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    margin-bottom: 0.75rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+
+    &:hover {
+      border-color: #4a90e2;
+      background: #f8f9fa;
+    }
+
+    input[type="radio"],
+    input[type="checkbox"] {
+      margin-right: 1rem;
+      cursor: pointer;
+      width: 20px;
+      height: 20px;
+    }
+
+    .option-text {
+      flex: 1;
+      font-size: 1rem;
+      color: #333;
+    }
+
+    &.vf-option {
+      justify-content: center;
+      font-size: 1.1rem;
+      font-weight: 500;
+    }
+  }
+
+  .option-item:has(input:checked) {
+    background: #e3f2fd;
+    border-color: #4a90e2;
+
+    .option-text {
+      color: #1976d2;
+      font-weight: 500;
+    }
+  }
+}
+
+.short-answer-container {
+  .short-answer-input {
+    width: 100%;
+    padding: 1rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+
+    &:focus {
+      outline: none;
+      border-color: #4a90e2;
+    }
+  }
+
+  .hint-text {
+    margin-top: 0.75rem;
+    color: #666;
+    font-size: 0.9rem;
+
+    i {
+      margin-right: 0.5rem;
+      color: #ffc107;
+    }
+  }
+}
+
+.question-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+
+  .btn-nav {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  .btn-prev {
+    background: #95a5a6;
+    color: white;
+
+    &:hover:not(:disabled) {
+      background: #7f8c8d;
+    }
+  }
+
+  .btn-next {
+    background: #4a90e2;
+    color: white;
+
+    &:hover:not(:disabled) {
+      background: #357abd;
+    }
+  }
+
+  .control-center {
+    .question-indicator {
+      font-weight: 600;
+      color: #666;
+      font-size: 1.1rem;
+    }
+  }
+}
+
+.submit-section {
+  text-align: center;
+  padding: 2rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  .submit-warning {
+    background: #fff3cd;
+    color: #856404;
+    padding: 1rem;
+    border-radius: 6px;
+    margin-bottom: 1.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+
+    i {
+      font-size: 1.2rem;
+    }
+  }
+
+  .btn-submit {
+    background: #27ae60;
+    color: white;
+    border: none;
+    padding: 1rem 3rem;
+    border-radius: 6px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+
+    &:hover:not(:disabled) {
+      background: #229954;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(39, 174, 96, 0.3);
+    }
+
+    &:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    i {
+      font-size: 1.2rem;
+    }
+  }
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  color: #666;
+
+  i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: #4a90e2;
+  }
+
+  p {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .tomar-examen-container {
+    padding: 1rem;
+  }
+
+  .exam-header {
+    flex-direction: column;
+    gap: 1.5rem;
+
+    .timer-container {
+      width: 100%;
+    }
+  }
+
+  .exam-form .question-card {
+    padding: 1.5rem 1rem;
+
+    .question-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+  }
+
+  .question-controls {
+    flex-wrap: wrap;
+    gap: 1rem;
+
+    .btn-nav {
+      flex: 1;
+      min-width: 120px;
+      justify-content: center;
+    }
+
+    .control-center {
+      width: 100%;
+      text-align: center;
+      order: -1;
+    }
+  }
+
+  .question-navigation .nav-buttons {
+    justify-content: center;
+  }
+}

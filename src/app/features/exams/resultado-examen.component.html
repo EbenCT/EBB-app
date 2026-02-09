@@ -1,0 +1,145 @@
+<div class="resultado-container" *ngIf="!loading && examen && intento">
+  <!-- Encabezado con resultado -->
+  <div class="result-header" [class.aprobado]="aprobado" [class.reprobado]="!aprobado">
+    <div class="result-icon">
+      <i class="fas" [class.fa-check-circle]="aprobado" [class.fa-times-circle]="!aprobado"></i>
+    </div>
+    <h1>{{ aprobado ? '¡Felicidades!' : 'Intento Completado' }}</h1>
+    <p class="result-message">
+      {{ aprobado
+        ? 'Has aprobado el examen'
+        : 'No alcanzaste la nota mínima para aprobar' }}
+    </p>
+    <div class="calificacion-display">
+      {{ intento.calificacion?.toFixed(2) }}%
+    </div>
+    <p class="nota-minima">Nota mínima: {{ examen.notaMinima }}%</p>
+  </div>
+
+  <!-- Resumen del intento -->
+  <div class="result-summary">
+    <h2><i class="fas fa-chart-bar"></i> Resumen del Intento</h2>
+
+    <div class="summary-grid">
+      <div class="summary-item">
+        <i class="fas fa-clipboard-list"></i>
+        <div class="summary-content">
+          <div class="summary-label">Examen</div>
+          <div class="summary-value">{{ examen.titulo }}</div>
+        </div>
+      </div>
+
+      <div class="summary-item">
+        <i class="fas fa-redo"></i>
+        <div class="summary-content">
+          <div class="summary-label">Intento</div>
+          <div class="summary-value">#{{ intento.numeroIntento }}</div>
+        </div>
+      </div>
+
+      <div class="summary-item">
+        <i class="fas fa-calendar-alt"></i>
+        <div class="summary-content">
+          <div class="summary-label">Fecha</div>
+          <div class="summary-value">{{ formatDate(intento.fechaInicio) }}</div>
+        </div>
+      </div>
+
+      <div class="summary-item">
+        <i class="fas fa-clock"></i>
+        <div class="summary-content">
+          <div class="summary-label">Duración</div>
+          <div class="summary-value">{{ getDuracion() }}</div>
+        </div>
+      </div>
+
+      <div class="summary-item">
+        <i class="fas fa-check-double"></i>
+        <div class="summary-content">
+          <div class="summary-label">Respuestas Correctas</div>
+          <div class="summary-value">{{ respuestasCorrectas }} / {{ totalPreguntas }}</div>
+        </div>
+      </div>
+
+      <div class="summary-item">
+        <i class="fas fa-percentage"></i>
+        <div class="summary-content">
+          <div class="summary-label">Ponderación</div>
+          <div class="summary-value">{{ examen.ponderacion }}%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detalles de respuestas (si está configurado para mostrarlas) -->
+  <div *ngIf="examen.mostrarRespuestas" class="answers-detail">
+    <h2><i class="fas fa-list-ul"></i> Detalle de Respuestas</h2>
+
+    <div *ngFor="let pregunta of examen.preguntas; let i = index" class="answer-card">
+      <div class="answer-header">
+        <span class="answer-number">Pregunta {{ i + 1 }}</span>
+        <span class="answer-status"
+              [class.correct]="intento.respuestas[i] && intento.respuestas[i].esCorrecta"
+              [class.incorrect]="intento.respuestas[i] && !intento.respuestas[i].esCorrecta">
+          <i class="fas"
+             [class.fa-check]="intento.respuestas[i] && intento.respuestas[i].esCorrecta"
+             [class.fa-times]="intento.respuestas[i] && !intento.respuestas[i].esCorrecta"></i>
+          {{ (intento.respuestas[i] && intento.respuestas[i].esCorrecta) ? 'Correcta' : 'Incorrecta' }}
+        </span>
+        <span class="answer-points">
+          {{ (intento.respuestas[i] && intento.respuestas[i].puntosObtenidos) || 0 }} / {{ pregunta.puntos }} pts
+        </span>
+      </div>
+
+      <div class="answer-body">
+        <div class="question-text">
+          {{ pregunta.texto }}
+        </div>
+
+        <div class="response-section">
+          <div class="response-item your-response">
+            <div class="response-label">
+              <i class="fas fa-user"></i> Tu respuesta:
+            </div>
+            <div class="response-value">
+              {{ getRespuestaTexto(pregunta.id) }}
+            </div>
+          </div>
+
+          <div *ngIf="!intento.respuestas[i]?.esCorrecta" class="response-item correct-response">
+            <div class="response-label">
+              <i class="fas fa-check-circle"></i> Respuesta correcta:
+            </div>
+            <div class="response-value">
+              {{ getRespuestaCorrectaTexto(pregunta.id) }}
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="pregunta.feedback" class="feedback-section">
+          <i class="fas fa-comment-dots"></i>
+          <span>{{ pregunta.feedback }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mensaje si no se muestran respuestas -->
+  <div *ngIf="!examen.mostrarRespuestas" class="no-answers-message">
+    <i class="fas fa-eye-slash"></i>
+    <p>El instructor ha configurado este examen para no mostrar las respuestas correctas.</p>
+  </div>
+
+  <!-- Acciones -->
+  <div class="result-actions">
+    <button class="btn-primary" (click)="volver()">
+      <i class="fas fa-home"></i> Volver al Inicio
+    </button>
+  </div>
+</div>
+
+<!-- Loading -->
+<div *ngIf="loading" class="loading-container">
+  <i class="fas fa-spinner fa-spin"></i>
+  <p>Cargando resultados...</p>
+</div>

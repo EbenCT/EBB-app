@@ -1,0 +1,618 @@
+<div class="course-viewer-container">
+  <!-- Navbar -->
+  <nav class="navbar navbar-dark bg-primary">
+    <div class="container-fluid">
+      <div class="d-flex align-items-center">
+        <button class="btn btn-outline-light me-2" (click)="goBack()">
+          <i class="fas fa-arrow-left"></i>
+        </button>
+        <!-- Botón hamburguesa para móviles -->
+        <button class="btn btn-outline-light me-2 d-md-none" (click)="toggleSidebar()">
+          <i class="fas fa-bars"></i>
+        </button>
+      </div>
+      <span class="navbar-brand mb-0 h1 flex-grow-1 text-center text-md-start" *ngIf="curso">
+        <i class="fas fa-book d-none d-md-inline"></i> {{ curso.titulo }}
+      </span>
+      <button class="btn btn-outline-light" (click)="logout()">
+        <i class="fas fa-sign-out-alt"></i>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Loading -->
+  <div class="loading-container" *ngIf="loading">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Cargando...</span>
+    </div>
+    <p class="mt-3">Cargando curso...</p>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-container" *ngIf="!loading && curso">
+    <!-- Overlay para cerrar menú en móviles -->
+    <div class="sidebar-overlay"
+         *ngIf="sidebarOpen"
+         (click)="toggleSidebar()"></div>
+
+    <!-- Sidebar -->
+    <div class="sidebar" [class.open]="sidebarOpen">
+      <div class="sidebar-header">
+        <h5><i class="fas fa-list"></i> Contenido del Curso</h5>
+      </div>
+
+      <!-- Accesos Rápidos a Calificaciones -->
+      <div class="quick-actions" *ngIf="userRole === 'profesor' || userRole === 'admin'">
+        <button class="btn-quick-action" (click)="verLibroCalificaciones()">
+          <i class="fas fa-book"></i>
+          <span>Libro de Calificaciones</span>
+        </button>
+        <button class="btn-quick-action" (click)="configurarCalificaciones()">
+          <i class="fas fa-cog"></i>
+          <span>Configurar Ponderaciones</span>
+        </button>
+        <button class="btn-quick-action" (click)="registrarAsistencia()">
+          <i class="fas fa-user-check"></i>
+          <span>Registrar Asistencia</span>
+        </button>
+      </div>
+
+      <div class="quick-actions" *ngIf="userRole === 'estudiante'">
+        <button class="btn-quick-action" (click)="verMiProgreso()">
+          <i class="fas fa-chart-line"></i>
+          <span>Mi Progreso y Calificaciones</span>
+        </button>
+      </div>
+
+      <div class="sections-list">
+        <div class="section-item" *ngFor="let seccion of secciones; let i = index">
+          <!-- Sección Header -->
+          <div class="section-header"
+               [class.locked]="userRole === 'estudiante' && seccion.progreso?.bloqueada"
+               (click)="toggleSeccion(seccion)">
+            <div class="section-info">
+              <i class="fas" [class.fa-chevron-right]="!seccion.expanded" [class.fa-chevron-down]="seccion.expanded"></i>
+              <span class="section-number">{{ i + 1 }}.</span>
+              <span class="section-title">{{ seccion.titulo }}</span>
+
+              <!-- Indicador de bloqueo -->
+              <i class="fas fa-lock ms-2 text-warning"
+                 *ngIf="userRole === 'estudiante' && seccion.progreso?.bloqueada"
+                 title="Sección bloqueada"></i>
+              <i class="fas fa-lock-open ms-2 text-success"
+                 *ngIf="userRole === 'estudiante' && !seccion.progreso?.bloqueada && seccion.desbloqueoProgresivo"
+                 title="Sección desbloqueada"></i>
+            </div>
+
+            <div class="section-badges">
+              <!-- Badge de progreso (solo estudiantes) -->
+              <span class="badge bg-info me-1"
+                    *ngIf="userRole === 'estudiante' && seccion.progreso"
+                    title="Progreso en esta sección">
+                {{ seccion.progreso.porcentajeCompletado }}%
+              </span>
+
+              <!-- Badge de cantidad de lecciones -->
+              <span class="badge bg-secondary">{{ seccion.lecciones.length }}</span>
+            </div>
+          </div>
+
+          <!-- Lecciones de la Sección -->
+          <div class="section-content" *ngIf="seccion.expanded">
+            <!-- Lección -->
+            <div class="leccion-item" *ngFor="let leccion of seccion.lecciones">
+              <!-- Header de Lección -->
+              <div class="leccion-header"
+                   [class.active]="contenidoActual.tipo === 'leccion' && contenidoActual.elemento?.id === leccion.id">
+                <div class="leccion-info" (click)="loadLeccion(seccion, leccion)">
+                  <i class="fas fa-book-open"></i>
+                  <span class="leccion-titulo">{{ leccion.titulo }}</span>
+                </div>
+                <div class="leccion-actions">
+                  <span class="badge bg-primary"
+                        *ngIf="leccion.tareasData.length > 0"
+                        (click)="toggleLeccion(leccion); $event.stopPropagation()"
+                        style="cursor: pointer;"
+                        title="Click para ver/ocultar tareas">
+                    {{ leccion.tareasData.length }} tarea{{ leccion.tareasData.length !== 1 ? 's' : '' }}
+                  </span>
+                  <i class="fas ms-2"
+                     *ngIf="leccion.tareasData.length > 0"
+                     [class.fa-chevron-down]="!leccion.expanded"
+                     [class.fa-chevron-up]="leccion.expanded"
+                     (click)="toggleLeccion(leccion); $event.stopPropagation()"
+                     style="cursor: pointer;"
+                     title="Click para ver/ocultar tareas"></i>
+                </div>
+              </div>
+
+              <!-- Tareas de la Lección -->
+              <div class="tareas-list" *ngIf="leccion.expanded && leccion.tareasData.length > 0">
+                <div class="tarea-item"
+                     *ngFor="let tarea of leccion.tareasData"
+                     [class.active]="contenidoActual.tipo === 'tarea' && contenidoActual.elemento?.id === tarea.id"
+                     (click)="loadTarea(seccion, tarea); $event.stopPropagation()">
+                  <i class="fas fa-tasks"></i>
+                  <span class="tarea-titulo">{{ tarea.titulo }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Exámenes de la Sección -->
+            <div class="examenes-section" *ngIf="seccion.examenesData.length > 0">
+              <div class="examenes-header">
+                <i class="fas fa-clipboard-check"></i>
+                <span>Exámenes</span>
+              </div>
+              <div class="examen-item"
+                   *ngFor="let examen of seccion.examenesData"
+                   [class.active]="contenidoActual.tipo === 'examen' && contenidoActual.elemento?.id === examen.id"
+                   (click)="loadExamen(seccion, examen)">
+                <div class="examen-info">
+                  <i class="fas fa-file-alt"></i>
+                  <span class="examen-titulo">{{ examen.titulo }}</span>
+                </div>
+                <span class="badge"
+                      [class.bg-success]="getEstadoExamen(examen) === 'Disponible'"
+                      [class.bg-warning]="getEstadoExamen(examen) === 'Próximamente'"
+                      [class.bg-danger]="getEstadoExamen(examen) === 'Cerrado' || getEstadoExamen(examen) === 'Sin intentos'"
+                      [class.text-dark]="getEstadoExamen(examen) === 'Próximamente'">
+                  {{ getEstadoExamen(examen) }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div class="text-center py-4 text-muted" *ngIf="secciones.length === 0">
+          <i class="fas fa-inbox fa-3x mb-3"></i>
+          <p>Este curso no tiene contenido aún</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content Area -->
+    <div class="content-area">
+      <!-- No content selected -->
+      <div class="no-content" *ngIf="!contenidoActual.elemento">
+        <i class="fas fa-hand-pointer fa-4x mb-4 text-muted"></i>
+        <h4 class="text-muted">Selecciona un elemento del menú</h4>
+        <p class="text-muted">Haz clic en una lección o tarea para ver su contenido</p>
+      </div>
+
+      <!-- Leccion Content -->
+      <div class="content-wrapper" *ngIf="getLeccionActual() as leccion">
+        <div class="content-header">
+          <span class="badge bg-info mb-2">
+            <i class="fas fa-book-open"></i> Lección
+          </span>
+          <h2>{{ leccion.titulo }}</h2>
+          <p class="text-muted" *ngIf="contenidoActual.seccionTitulo">
+            <i class="fas fa-folder"></i> {{ contenidoActual.seccionTitulo }}
+          </p>
+        </div>
+
+        <div class="content-body">
+          <!-- Contenido según tipo -->
+          <div class="lesson-content mt-4">
+            <!-- Texto con Markdown -->
+            <div *ngIf="leccion.tipo === 'texto'" class="texto-content">
+              <div class="card">
+                <div class="card-body markdown-content" [innerHTML]="getMarkdownHTML(leccion.contenido)"></div>
+              </div>
+            </div>
+
+            <!-- Video YouTube -->
+            <div *ngIf="leccion.tipo === 'video' && leccion.urlYoutube" class="video-content">
+              <h5><i class="fas fa-video"></i> Video de la Lección</h5>
+              <div class="video-container">
+                <iframe
+                  [src]="getYoutubeEmbedUrl(leccion.urlYoutube)"
+                  frameborder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowfullscreen>
+                </iframe>
+              </div>
+            </div>
+
+            <!-- PDF -->
+            <div *ngIf="leccion.tipo === 'pdf' && leccion.urlArchivo" class="pdf-content">
+              <h5><i class="fas fa-file-pdf"></i> Documento PDF</h5>
+              <div class="pdf-container">
+                <iframe [src]="getSafePdfUrl(leccion.urlArchivo)" frameborder="0"></iframe>
+              </div>
+              <a [href]="leccion.urlArchivo" target="_blank" class="btn btn-outline-primary mt-2">
+                <i class="fas fa-external-link-alt"></i> Abrir en nueva pestaña
+              </a>
+            </div>
+
+            <!-- Imagen -->
+            <div *ngIf="leccion.tipo === 'imagen' && leccion.urlArchivo" class="imagen-content">
+              <h5><i class="fas fa-image"></i> Imagen</h5>
+              <img [src]="leccion.urlArchivo" [alt]="leccion.titulo" class="img-fluid rounded">
+            </div>
+
+            <!-- Botón Completar Lección (solo para estudiantes) -->
+            <div *ngIf="userRole === 'estudiante'" class="leccion-actions mt-4">
+              <div class="alert alert-success" *ngIf="leccion.completada">
+                <i class="fas fa-check-circle"></i> Lección completada
+                <span *ngIf="leccion.fechaCompletado"> el {{ leccion.fechaCompletado | date:'dd/MM/yyyy HH:mm' }}</span>
+              </div>
+              <button
+                *ngIf="!leccion.completada"
+                class="btn btn-success btn-lg w-100"
+                (click)="completarLeccion(leccion)">
+                <i class="fas fa-check"></i> Completar Lección
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tarea Content -->
+      <div class="content-wrapper" *ngIf="getTareaActual() as tarea">
+        <div class="content-header">
+          <span class="badge bg-warning mb-2">
+            <i class="fas fa-tasks"></i> Tarea
+          </span>
+          <h2>{{ tarea.titulo }}</h2>
+          <p class="text-muted" *ngIf="contenidoActual.seccionTitulo">
+            <i class="fas fa-folder"></i> {{ contenidoActual.seccionTitulo }}
+          </p>
+        </div>
+
+        <div class="content-body">
+          <!-- Descripción -->
+          <div class="description-section" *ngIf="tarea.descripcion">
+            <h5><i class="fas fa-info-circle"></i> Descripción</h5>
+            <p>{{ tarea.descripcion }}</p>
+          </div>
+
+          <!-- Instrucciones -->
+          <div class="instructions-section mt-3" *ngIf="tarea.instrucciones">
+            <h5><i class="fas fa-list-ol"></i> Instrucciones</h5>
+            <div class="card bg-light">
+              <div class="card-body">
+                <p style="white-space: pre-wrap;">{{ tarea.instrucciones }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Detalles de la Tarea -->
+          <div class="task-details mt-4">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="detail-item">
+                  <strong><i class="fas fa-calendar-alt"></i> Fecha inicio:</strong>
+                  <span>{{ tarea.fechaInicio | date:'dd/MM/yyyy HH:mm' }}</span>
+                </div>
+                <div class="detail-item">
+                  <strong><i class="fas fa-calendar-check"></i> Fecha límite:</strong>
+                  <span [class.text-danger]="isTaskOverdue(tarea)">
+                    {{ tarea.fechaFin | date:'dd/MM/yyyy HH:mm' }}
+                  </span>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="detail-item">
+                  <strong><i class="fas fa-percentage"></i> Ponderación:</strong>
+                  <span class="badge bg-info">{{ tarea.ponderacion }}%</span>
+                </div>
+                <div class="detail-item">
+                  <strong><i class="fas fa-file-upload"></i> Tipo de entrega:</strong>
+                  <span class="badge bg-secondary">
+                    {{ tarea.tipoEntrega === 'texto' ? 'Solo Texto' : tarea.tipoEntrega === 'archivo' ? 'Solo Archivo' : 'Texto y Archivo' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Entrega del Estudiante -->
+          <div class="mt-4" *ngIf="userRole === 'estudiante'">
+            <h5 class="mb-3"><i class="fas fa-paper-plane"></i> Tu Entrega</h5>
+
+            <div class="card border-success mb-3" *ngIf="contenidoActual.entrega && contenidoActual.entrega.estado === 'calificada'">
+              <div class="card-header bg-success text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                  <span><i class="fas fa-check-circle"></i> Tarea Calificada</span>
+                  <span class="badge bg-light text-dark">{{ contenidoActual.entrega.calificacion }}/100</span>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-6">
+                    <h2 class="text-success mb-3">
+                      <i class="fas fa-star"></i> {{ contenidoActual.entrega.calificacion }}/100
+                    </h2>
+                    <p class="mb-2">
+                      <strong><i class="fas fa-percentage"></i> Ponderación:</strong> {{ getTareaActual()?.ponderacion }}%
+                    </p>
+                    <p class="mb-2">
+                      <strong><i class="fas fa-calculator"></i> Puntos obtenidos:</strong>
+                      {{ ((contenidoActual.entrega.calificacion || 0) * (getTareaActual()?.ponderacion || 0) / 100).toFixed(2) }} puntos
+                    </p>
+                    <p class="mb-0">
+                      <strong><i class="fas fa-calendar-check"></i> Entregado:</strong>
+                      {{ contenidoActual.entrega.fechaEntrega | date:'dd/MM/yyyy HH:mm' }}
+                    </p>
+                  </div>
+                  <div class="col-md-6" *ngIf="contenidoActual.entrega.retroalimentacion">
+                    <h6><i class="fas fa-comment-dots"></i> Retroalimentación del Profesor:</h6>
+                    <div class="alert alert-light border mb-0" style="white-space: pre-wrap;">{{ contenidoActual.entrega.retroalimentacion }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card border-info mb-3" *ngIf="contenidoActual.entrega && contenidoActual.entrega.estado !== 'calificada'">
+              <div class="card-header bg-info text-white">
+                <i class="fas fa-info-circle"></i> Ya entregaste esta tarea
+              </div>
+              <div class="card-body">
+                <p class="mb-2">
+                  <strong><i class="fas fa-calendar-check"></i> Entregado el:</strong>
+                  {{ contenidoActual.entrega.fechaEntrega | date:'dd/MM/yyyy HH:mm' }}
+                </p>
+                <p class="mb-0">
+                  <strong><i class="fas fa-info"></i> Estado:</strong>
+                  <span class="badge bg-info">{{ contenidoActual.entrega.estado }}</span>
+                </p>
+              </div>
+            </div>
+
+            <div class="alert alert-warning" *ngIf="!contenidoActual.entrega">
+              <i class="fas fa-exclamation-triangle"></i> Aún no has entregado esta tarea
+            </div>
+
+            <button class="btn btn-primary btn-lg w-100" (click)="entregarTarea(getTareaActual()!.id)">
+              <i class="fas fa-paper-plane"></i> {{ contenidoActual.entrega ? 'Modificar Entrega' : 'Entregar Tarea' }}
+            </button>
+          </div>
+
+          <!-- Debug info (temporal) -->
+          <div class="mt-3 p-2 bg-light border" *ngIf="!userRole || userRole === ''">
+            <small class="text-danger">Debug: userRole no está definido. UserRole actual: "{{ userRole }}"</small>
+          </div>
+
+          <!-- Opciones del Profesor -->
+          <div class="mt-4" *ngIf="userRole === 'profesor' && getTareaActual()">
+            <button class="btn btn-success me-2" (click)="verEntregas(getTareaActual()!.id)">
+              <i class="fas fa-eye"></i> Ver Entregas
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Examen Content -->
+      <div class="content-wrapper" *ngIf="getExamenActual() as examen">
+        <div class="content-header">
+          <span class="badge mb-2"
+                [class.bg-success]="getEstadoExamen(examen) === 'Disponible'"
+                [class.bg-warning]="getEstadoExamen(examen) === 'Próximamente'"
+                [class.bg-danger]="getEstadoExamen(examen) === 'Cerrado' || getEstadoExamen(examen) === 'Sin intentos'"
+                [class.text-dark]="getEstadoExamen(examen) === 'Próximamente'">
+            <i class="fas fa-clipboard-check"></i> Examen - {{ getEstadoExamen(examen) }}
+          </span>
+          <h2>{{ examen.titulo }}</h2>
+          <p class="text-muted" *ngIf="contenidoActual.seccionTitulo">
+            <i class="fas fa-folder"></i> {{ contenidoActual.seccionTitulo }}
+          </p>
+        </div>
+
+        <div class="content-body">
+          <!-- Descripción -->
+          <div class="description-section" *ngIf="examen.descripcion">
+            <h5><i class="fas fa-info-circle"></i> Descripción</h5>
+            <p>{{ examen.descripcion }}</p>
+          </div>
+
+          <!-- Detalles del Examen -->
+          <div class="exam-details mt-4">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="detail-item">
+                  <strong><i class="fas fa-calendar-alt"></i> Disponible desde:</strong>
+                  <span>{{ examen.fechaInicio | date:'dd/MM/yyyy HH:mm' }}</span>
+                </div>
+                <div class="detail-item">
+                  <strong><i class="fas fa-calendar-times"></i> Cierra:</strong>
+                  <span>{{ examen.fechaFin | date:'dd/MM/yyyy HH:mm' }}</span>
+                </div>
+                <div class="detail-item">
+                  <strong><i class="fas fa-clock"></i> Duración:</strong>
+                  <span class="badge bg-info">{{ examen.duracionMinutos }} minutos</span>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="detail-item">
+                  <strong><i class="fas fa-percentage"></i> Ponderación:</strong>
+                  <span class="badge bg-info">{{ examen.ponderacion }}%</span>
+                </div>
+                <div class="detail-item">
+                  <strong><i class="fas fa-chart-line"></i> Nota mínima:</strong>
+                  <span class="badge bg-warning text-dark">{{ examen.notaMinima }}%</span>
+                </div>
+                <div class="detail-item">
+                  <strong><i class="fas fa-question-circle"></i> Preguntas:</strong>
+                  <span class="badge bg-secondary">{{ examen.preguntas.length }}</span>
+                </div>
+                <div class="detail-item">
+                  <strong><i class="fas fa-redo"></i> Intentos permitidos:</strong>
+                  <span class="badge bg-primary">{{ examen.intentosPermitidos }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Opciones adicionales -->
+            <div class="row mt-3">
+              <div class="col-12">
+                <div class="alert alert-light border">
+                  <div class="d-flex gap-3 flex-wrap">
+                    <span *ngIf="examen.mezclarPreguntas">
+                      <i class="fas fa-random text-info"></i> Las preguntas se mezclarán
+                    </span>
+                    <span *ngIf="examen.mostrarRespuestas">
+                      <i class="fas fa-eye text-success"></i> Se mostrarán las respuestas correctas
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Estado del estudiante -->
+          <div class="student-status mt-4" *ngIf="userRole === 'estudiante'">
+            <!-- Intentos realizados -->
+            <div class="card border-primary mb-3">
+              <div class="card-header bg-primary text-white">
+                <i class="fas fa-chart-bar"></i> Tu Progreso
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-6">
+                    <p class="mb-2">
+                      <strong><i class="fas fa-list-ol"></i> Intentos realizados:</strong>
+                      {{ examen.intentosPermitidos - examen.intentosRestantes }} / {{ examen.intentosPermitidos }}
+                    </p>
+                    <p class="mb-2">
+                      <strong><i class="fas fa-redo"></i> Intentos restantes:</strong>
+                      <span class="badge" [class.bg-success]="examen.intentosRestantes > 0" [class.bg-danger]="examen.intentosRestantes === 0">
+                        {{ examen.intentosRestantes }}
+                      </span>
+                    </p>
+                  </div>
+                  <div class="col-md-6" *ngIf="getMejorCalificacion(examen) !== null">
+                    <p class="mb-2">
+                      <strong><i class="fas fa-star"></i> Mejor calificación:</strong>
+                      <span class="badge bg-success">{{ getMejorCalificacion(examen)?.toFixed(2) }}%</span>
+                    </p>
+                    <p class="mb-0">
+                      <strong><i class="fas fa-calculator"></i> Puntos obtenidos:</strong>
+                      {{ ((getMejorCalificacion(examen) || 0) * examen.ponderacion / 100).toFixed(2) }} puntos
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Historial de intentos -->
+            <div class="card mb-3" *ngIf="examen.intentosUsuario.length > 0">
+              <div class="card-header">
+                <i class="fas fa-history"></i> Historial de Intentos
+              </div>
+              <div class="card-body">
+                <div class="table-responsive">
+                  <table class="table table-sm">
+                    <thead>
+                      <tr>
+                        <th>Intento</th>
+                        <th>Fecha</th>
+                        <th>Calificación</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let intento of examen.intentosUsuario">
+                        <td>#{{ intento.numeroIntento }}</td>
+                        <td>{{ intento.fechaInicio | date:'dd/MM/yyyy HH:mm' }}</td>
+                        <td>
+                          <span class="badge"
+                                *ngIf="intento.calificacion !== undefined"
+                                [class.bg-success]="intento.calificacion >= examen.notaMinima"
+                                [class.bg-danger]="intento.calificacion < examen.notaMinima">
+                            {{ intento.calificacion.toFixed(2) }}%
+                          </span>
+                          <span *ngIf="intento.calificacion === undefined">-</span>
+                        </td>
+                        <td>
+                          <span class="badge"
+                                [class.bg-success]="intento.estado === 'finalizado'"
+                                [class.bg-warning]="intento.estado === 'en_progreso'"
+                                [class.bg-danger]="intento.estado === 'tiempo_agotado'"
+                                [class.text-dark]="intento.estado === 'en_progreso'">
+                            {{ intento.estado === 'finalizado' ? 'Finalizado' : intento.estado === 'en_progreso' ? 'En Progreso' : 'Tiempo Agotado' }}
+                          </span>
+                        </td>
+                        <td>
+                          <button class="btn btn-sm btn-outline-primary"
+                                  *ngIf="intento.estado === 'finalizado'"
+                                  (click)="verResultadosExamen(examen.id, intento.id)">
+                            <i class="fas fa-eye"></i> Ver Resultados
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- Botón para estudiantes -->
+            <div class="alert alert-info" *ngIf="userRole === 'estudiante' && !isExamenDisponible(examen) && getEstadoExamen(examen) !== 'Disponible'">
+              <i class="fas fa-info-circle"></i>
+              {{ getEstadoExamen(examen) === 'Próximamente' ? 'Este examen aún no está disponible.' :
+                 getEstadoExamen(examen) === 'Cerrado' ? 'Este examen ya ha cerrado.' :
+                 'Has agotado todos tus intentos para este examen.' }}
+            </div>
+
+            <button class="btn btn-success btn-lg w-100"
+                    *ngIf="userRole === 'estudiante' && isExamenDisponible(examen)"
+                    (click)="tomarExamen(examen.id)">
+              <i class="fas fa-play"></i> Comenzar Examen
+            </button>
+          </div>
+
+          <!-- Opciones del Profesor -->
+          <div class="mt-4" *ngIf="userRole === 'profesor' && getExamenActual()">
+            <button class="btn btn-success me-2" (click)="verIntentosExamen(getExamenActual()!.id)">
+              <i class="fas fa-eye"></i> Ver Intentos
+            </button>
+          </div>
+        </div>
+      </div>
+<!-- Modal de Retroalimentación -->
+<div class="modal fade" id="modalRetroalimentacion" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">
+          <i class="fas fa-question-circle"></i> Pregunta de Retroalimentación
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p class="lead mb-4">{{ preguntaRetroalimentacion?.texto }}</p>
+
+        <div class="d-grid gap-2">
+          <button class="btn btn-outline-primary btn-lg text-start"
+                  [class.active]="respuestaSeleccionada === opcion1"
+                  (click)="seleccionarRespuesta(opcion1)">
+            <i class="fas fa-circle" [class.fa-check-circle]="respuestaSeleccionada === opcion1"></i>
+            {{ opcion1 }}
+          </button>
+          <button class="btn btn-outline-primary btn-lg text-start"
+                  [class.active]="respuestaSeleccionada === opcion2"
+                  (click)="seleccionarRespuesta(opcion2)">
+            <i class="fas fa-circle" [class.fa-check-circle]="respuestaSeleccionada === opcion2"></i>
+            {{ opcion2 }}
+          </button>
+        </div>
+
+        <div class="alert alert-danger mt-3" *ngIf="mostrarErrorRetroalimentacion">
+          <i class="fas fa-times-circle"></i> Respuesta incorrecta. Por favor, revisa el contenido de la lección e intenta nuevamente.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary"
+                [disabled]="!respuestaSeleccionada"
+                (click)="validarRetroalimentacion()">
+          <i class="fas fa-check"></i> Confirmar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

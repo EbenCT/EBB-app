@@ -1,0 +1,60 @@
+.dashboard-container {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+}
+
+.stat-card {
+  transition: transform 0.2s;
+  cursor: default;
+
+  &:hover {
+    transform: translateY(-5px);
+  }
+}
+
+.action-card {
+  transition: all 0.3s;
+  cursor: pointer;
+  border: 2px solid transparent;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+    border-color: #667eea;
+  }
+}
+
+.curso-card {
+  transition: all 0.3s;
+  border-left: 4px solid #4a90e2;
+
+  &:hover {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15) !important;
+  }
+
+  h5 {
+    color: #333;
+    font-weight: 600;
+  }
+
+  .btn {
+    white-space: nowrap;
+
+    i {
+      margin-right: 0.25rem;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .curso-card {
+    .btn {
+      width: 100%;
+      margin-bottom: 0.5rem;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+}

@@ -1,0 +1,167 @@
+<div class="tomar-examen-container" *ngIf="!loading && examen">
+  <!-- Header con título y cronómetro -->
+  <div class="exam-header">
+    <div class="exam-info">
+      <h1>{{ examen.titulo }}</h1>
+      <p class="exam-description">{{ examen.descripcion }}</p>
+      <div class="exam-meta">
+        <span><i class="fas fa-question-circle"></i> {{ preguntasActuales.length }} preguntas</span>
+        <span><i class="fas fa-trophy"></i> {{ examen.ponderacion }}% del total</span>
+        <span><i class="fas fa-chart-line"></i> Nota mínima: {{ examen.notaMinima }}%</span>
+      </div>
+    </div>
+
+    <div class="timer-container" [class]="timerClass">
+      <i class="fas fa-clock"></i>
+      <div class="timer-display">{{ formatTime(tiempoRestante) }}</div>
+      <div class="timer-label">Tiempo restante</div>
+    </div>
+  </div>
+
+  <!-- Barra de progreso -->
+  <div class="progress-bar-container">
+    <div class="progress-info">
+      <span>Progreso: {{ preguntasRespondidas }} / {{ preguntasActuales.length }}</span>
+      <span>{{ progreso.toFixed(0) }}%</span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" [style.width.%]="progreso"></div>
+    </div>
+  </div>
+
+  <!-- Navegación de preguntas -->
+  <div class="question-navigation">
+    <div class="nav-label">Ir a pregunta:</div>
+    <div class="nav-buttons">
+      <button
+        *ngFor="let pregunta of preguntasActuales; let i = index"
+        [class.active]="i === preguntaActualIndex"
+        [class.answered]="isPreguntaRespondida(pregunta)"
+        (click)="navegarPregunta(i)"
+        class="nav-btn">
+        {{ i + 1 }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Pregunta actual -->
+  <form [formGroup]="respuestasForm" class="exam-form">
+    <div class="question-card">
+      <div class="question-header">
+        <span class="question-number">Pregunta {{ preguntaActualIndex + 1 }} de {{ preguntasActuales.length }}</span>
+        <span class="question-points">{{ preguntaActual.puntos }} {{ preguntaActual.puntos === 1 ? 'punto' : 'puntos' }}</span>
+      </div>
+
+      <div class="question-text">
+        {{ preguntaActual.texto }}
+      </div>
+
+      <!-- Opciones múltiples (respuesta única) -->
+      <div *ngIf="preguntaActual.tipo === 'multiple_unica'" class="options-container">
+        <label
+          *ngFor="let opcion of preguntaActual.opciones"
+          class="option-item radio-option">
+          <input
+            type="radio"
+            [formControlName]="getFormControlName(preguntaActual.id)"
+            [value]="opcion.id">
+          <span class="option-text">{{ opcion.texto }}</span>
+        </label>
+      </div>
+
+      <!-- Opciones múltiples (múltiples respuestas) -->
+      <div *ngIf="preguntaActual.tipo === 'multiple_multiple'" class="options-container">
+        <p class="multiple-hint">
+          <i class="fas fa-info-circle"></i> Puedes seleccionar más de una opción
+        </p>
+        <label
+          *ngFor="let opcion of preguntaActual.opciones"
+          class="option-item checkbox-option">
+          <input
+            type="checkbox"
+            [formControlName]="getFormControlName(preguntaActual.id, opcion.id)">
+          <span class="option-text">{{ opcion.texto }}</span>
+        </label>
+      </div>
+
+      <!-- Verdadero/Falso -->
+      <div *ngIf="preguntaActual.tipo === 'verdadero_falso'" class="options-container">
+        <label
+          *ngFor="let opcion of preguntaActual.opciones"
+          class="option-item radio-option vf-option">
+          <input
+            type="radio"
+            [formControlName]="getFormControlName(preguntaActual.id)"
+            [value]="opcion.id">
+          <span class="option-text">{{ opcion.texto }}</span>
+        </label>
+      </div>
+
+      <!-- Respuesta corta -->
+      <div *ngIf="preguntaActual.tipo === 'corta'" class="short-answer-container">
+        <input
+          type="text"
+          [formControlName]="getFormControlName(preguntaActual.id)"
+          class="short-answer-input"
+          placeholder="Escribe tu respuesta aquí">
+      </div>
+
+      <!-- Completar espacio -->
+      <div *ngIf="preguntaActual.tipo === 'completar'" class="short-answer-container">
+        <input
+          type="text"
+          [formControlName]="getFormControlName(preguntaActual.id)"
+          class="short-answer-input"
+          placeholder="Completa la respuesta">
+        <p class="hint-text">
+          <i class="fas fa-lightbulb"></i> Escribe la palabra o frase que complete correctamente la pregunta
+        </p>
+      </div>
+    </div>
+
+    <!-- Navegación entre preguntas -->
+    <div class="question-controls">
+      <button
+        type="button"
+        class="btn-nav btn-prev"
+        (click)="anterior()"
+        [disabled]="preguntaActualIndex === 0">
+        <i class="fas fa-chevron-left"></i> Anterior
+      </button>
+
+      <div class="control-center">
+        <span class="question-indicator">{{ preguntaActualIndex + 1 }} / {{ preguntasActuales.length }}</span>
+      </div>
+
+      <button
+        type="button"
+        class="btn-nav btn-next"
+        (click)="siguiente()"
+        [disabled]="preguntaActualIndex === preguntasActuales.length - 1">
+        Siguiente <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+
+    <!-- Botón de envío -->
+    <div class="submit-section">
+      <div class="submit-warning">
+        <i class="fas fa-exclamation-triangle"></i>
+        Asegúrate de haber respondido todas las preguntas antes de enviar
+      </div>
+      <button
+        type="button"
+        class="btn-submit"
+        (click)="submitExam()"
+        [disabled]="submitting">
+        <i class="fas" [class.fa-paper-plane]="!submitting" [class.fa-spinner]="submitting" [class.fa-spin]="submitting"></i>
+        {{ submitting ? 'Enviando...' : 'Enviar Examen' }}
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- Loading -->
+<div *ngIf="loading" class="loading-container">
+  <i class="fas fa-spinner fa-spin"></i>
+  <p>Cargando examen...</p>
+</div>

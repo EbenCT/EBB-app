@@ -1,0 +1,173 @@
+<div class="lista-intentos-container">
+  <!-- Header -->
+  <div class="header">
+    <button class="btn-back" (click)="volver()">
+      <i class="fas fa-arrow-left"></i> Volver
+    </button>
+    <div class="header-info">
+      <h1>Intentos de Examen</h1>
+      <p class="examen-titulo" *ngIf="examen">{{ examen.titulo }}</p>
+    </div>
+    <button class="btn-export" (click)="exportarResultados()">
+      <i class="fas fa-file-excel"></i> Exportar
+    </button>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading">
+    <i class="fas fa-spinner fa-spin"></i> Cargando intentos...
+  </div>
+
+  <!-- Contenido -->
+  <div *ngIf="!loading" class="content">
+    <!-- Estadísticas -->
+    <div class="estadisticas-grid">
+      <div class="stat-card">
+        <i class="fas fa-users"></i>
+        <div class="stat-content">
+          <span class="stat-value">{{ estadisticas.total }}</span>
+          <span class="stat-label">Total Intentos</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <i class="fas fa-check-circle"></i>
+        <div class="stat-content">
+          <span class="stat-value">{{ estadisticas.finalizados }}</span>
+          <span class="stat-label">Finalizados</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <i class="fas fa-chart-line"></i>
+        <div class="stat-content">
+          <span class="stat-value">{{ estadisticas.promedio | number:'1.1-1' }}%</span>
+          <span class="stat-label">Promedio</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <i class="fas fa-trophy"></i>
+        <div class="stat-content">
+          <span class="stat-value">{{ estadisticas.aprobados }}</span>
+          <span class="stat-label">Aprobados</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <i class="fas fa-percentage"></i>
+        <div class="stat-content">
+          <span class="stat-value">{{ estadisticas.porcentajeAprobacion | number:'1.0-0' }}%</span>
+          <span class="stat-label">% Aprobación</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filtros">
+      <div class="filtro-grupo">
+        <label for="filtroEstado">Estado:</label>
+        <select id="filtroEstado" [(ngModel)]="filtroEstado" class="form-control">
+          <option value="todos">Todos</option>
+          <option value="finalizado">Finalizados</option>
+          <option value="en_progreso">En Progreso</option>
+          <option value="tiempo_agotado">Tiempo Agotado</option>
+        </select>
+      </div>
+
+      <div class="filtro-grupo">
+        <label for="filtroBusqueda">Buscar estudiante:</label>
+        <input
+          type="text"
+          id="filtroBusqueda"
+          [(ngModel)]="filtroBusqueda"
+          class="form-control"
+          placeholder="Nombre o email...">
+      </div>
+    </div>
+
+    <!-- Tabla de Intentos -->
+    <div class="tabla-container">
+      <table class="intentos-table">
+        <thead>
+          <tr>
+            <th>Estudiante</th>
+            <th>Email</th>
+            <th>Fecha Inicio</th>
+            <th>Fecha Fin</th>
+            <th>Estado</th>
+            <th>Calificación</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let intento of intentosFiltrados">
+            <td>
+              <div class="estudiante-info">
+                <i class="fas fa-user-circle"></i>
+                {{ intento.nombreEstudiante }}
+              </div>
+            </td>
+            <td class="email-cell">{{ intento.emailEstudiante }}</td>
+            <td>{{ intento.fechaInicio | date:'dd/MM/yyyy HH:mm' }}</td>
+            <td>{{ intento.fechaFin ? (intento.fechaFin | date:'dd/MM/yyyy HH:mm') : '-' }}</td>
+            <td>
+              <span class="badge" [ngClass]="getEstadoClass(intento.estado)">
+                {{ getEstadoTexto(intento.estado) }}
+              </span>
+            </td>
+            <td>
+              <!-- Modo Edición -->
+              <div *ngIf="editingIntento === intento.id" class="calificacion-edit">
+                <input
+                  type="number"
+                  [(ngModel)]="nuevaCalificacion"
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  class="input-calificacion">
+                <button class="btn-icon btn-save" (click)="guardarCalificacion(intento.id!)" title="Guardar">
+                  <i class="fas fa-check"></i>
+                </button>
+                <button class="btn-icon btn-cancel" (click)="cancelarEdicion()" title="Cancelar">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+
+              <!-- Modo Visualización -->
+              <div *ngIf="editingIntento !== intento.id" class="calificacion-view">
+                <span class="calificacion-valor" [ngClass]="getCalificacionClass(intento.calificacion || 0)">
+                  {{ intento.calificacion !== undefined ? (intento.calificacion | number:'1.1-1') + '%' : '-' }}
+                </span>
+                <button
+                  *ngIf="intento.estado === 'finalizado' || intento.estado === 'tiempo_agotado'"
+                  class="btn-icon btn-edit"
+                  (click)="iniciarEdicionCalificacion(intento)"
+                  title="Editar calificación">
+                  <i class="fas fa-edit"></i>
+                </button>
+              </div>
+            </td>
+            <td>
+              <div class="acciones">
+                <button
+                  class="btn-action btn-view"
+                  (click)="verRespuestas(intento.id!)"
+                  [disabled]="intento.estado === 'en_progreso'"
+                  title="Ver respuestas">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Sin resultados -->
+      <div *ngIf="intentosFiltrados.length === 0" class="no-resultados">
+        <i class="fas fa-inbox"></i>
+        <p>No se encontraron intentos</p>
+      </div>
+    </div>
+  </div>
+</div>

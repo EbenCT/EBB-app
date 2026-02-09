@@ -1,0 +1,195 @@
+<div class="configurar-container">
+  <div class="header">
+    <button class="btn-back" (click)="volver()">
+      <i class="fas fa-arrow-left"></i> Volver
+    </button>
+    <h1>{{ isEdit ? 'Editar' : 'Configurar' }} Calificaciones</h1>
+  </div>
+
+  <form [formGroup]="configForm" (ngSubmit)="onSubmit()" class="config-form">
+
+    <!-- Ponderaciones -->
+    <div class="form-section">
+      <h2><i class="fas fa-balance-scale"></i> Ponderaciones</h2>
+      <p class="help-text">Define el peso porcentual de cada tipo de evaluación. Debe sumar 100%.</p>
+
+      <div class="ponderaciones-grid">
+        <div class="form-group">
+          <label for="ponderacionTareas">
+            <i class="fas fa-tasks"></i> Tareas (%)
+          </label>
+          <input
+            type="number"
+            id="ponderacionTareas"
+            formControlName="ponderacionTareas"
+            min="0"
+            max="100"
+            class="form-control">
+          <div class="progress-bar">
+            <div class="progress-fill tareas"
+                 [style.width.%]="configForm.get('ponderacionTareas')?.value || 0">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="ponderacionExamenes">
+            <i class="fas fa-file-alt"></i> Exámenes Prácticos (%)
+          </label>
+          <input
+            type="number"
+            id="ponderacionExamenes"
+            formControlName="ponderacionExamenes"
+            min="0"
+            max="100"
+            class="form-control">
+          <div class="progress-bar">
+            <div class="progress-fill examenes"
+                 [style.width.%]="configForm.get('ponderacionExamenes')?.value || 0">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="ponderacionExamenFinal">
+            <i class="fas fa-star"></i> Examen Final (%)
+          </label>
+          <input
+            type="number"
+            id="ponderacionExamenFinal"
+            formControlName="ponderacionExamenFinal"
+            min="0"
+            max="100"
+            class="form-control">
+          <div class="progress-bar">
+            <div class="progress-fill examen-final"
+                 [style.width.%]="configForm.get('ponderacionExamenFinal')?.value || 0">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="ponderacionAsistencia">
+            <i class="fas fa-user-check"></i> Asistencia (%)
+          </label>
+          <input
+            type="number"
+            id="ponderacionAsistencia"
+            formControlName="ponderacionAsistencia"
+            min="0"
+            max="100"
+            class="form-control">
+          <div class="progress-bar">
+            <div class="progress-fill asistencia"
+                 [style.width.%]="configForm.get('ponderacionAsistencia')?.value || 0">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="validation-message" *ngIf="configForm.hasError('ponderacionInvalida')">
+        <i class="fas fa-exclamation-triangle"></i>
+        Las ponderaciones deben sumar exactamente 100%
+      </div>
+
+      <div class="total-ponderacion"
+           [class.valid]="(configForm.get('ponderacionTareas')?.value || 0) + (configForm.get('ponderacionExamenes')?.value || 0) + (configForm.get('ponderacionExamenFinal')?.value || 0) + (configForm.get('ponderacionAsistencia')?.value || 0) === 100"
+           [class.invalid]="(configForm.get('ponderacionTareas')?.value || 0) + (configForm.get('ponderacionExamenes')?.value || 0) + (configForm.get('ponderacionExamenFinal')?.value || 0) + (configForm.get('ponderacionAsistencia')?.value || 0) !== 100">
+        Total: {{ (configForm.get('ponderacionTareas')?.value || 0) + (configForm.get('ponderacionExamenes')?.value || 0) + (configForm.get('ponderacionExamenFinal')?.value || 0) + (configForm.get('ponderacionAsistencia')?.value || 0) }}%
+        <i class="fas fa-check-circle" *ngIf="(configForm.get('ponderacionTareas')?.value || 0) + (configForm.get('ponderacionExamenes')?.value || 0) + (configForm.get('ponderacionExamenFinal')?.value || 0) + (configForm.get('ponderacionAsistencia')?.value || 0) === 100"></i>
+      </div>
+    </div>
+
+    <!-- Nota Mínima de Aprobación -->
+    <div class="form-section">
+      <h2><i class="fas fa-check-circle"></i> Nota Mínima de Aprobación</h2>
+      <p class="help-text">Calificación mínima que debe obtener un estudiante para aprobar el curso.</p>
+
+      <div class="form-group">
+        <label for="notaMinima">Nota Mínima (%)</label>
+        <input
+          type="number"
+          id="notaMinima"
+          formControlName="notaMinima"
+          min="0"
+          max="100"
+          class="form-control">
+        <small>Valor actual: {{ configForm.get('notaMinima')?.value }}%</small>
+      </div>
+    </div>
+
+    <!-- Escala de Calificaciones -->
+    <div class="form-section">
+      <h2><i class="fas fa-chart-line"></i> Escala de Calificaciones</h2>
+      <p class="help-text">Define los rangos para clasificar el desempeño de los estudiantes.</p>
+
+      <div class="escala-grid">
+        <div class="form-group">
+          <label for="escalaExcelente">
+            <span class="badge badge-excelente">Excelente</span>
+          </label>
+          <input
+            type="number"
+            id="escalaExcelente"
+            formControlName="escalaExcelente"
+            min="0"
+            max="100"
+            class="form-control">
+          <small>≥ {{ configForm.get('escalaExcelente')?.value }}%</small>
+        </div>
+
+        <div class="form-group">
+          <label for="escalaBueno">
+            <span class="badge badge-bueno">Bueno</span>
+          </label>
+          <input
+            type="number"
+            id="escalaBueno"
+            formControlName="escalaBueno"
+            min="0"
+            max="100"
+            class="form-control">
+          <small>{{ configForm.get('escalaBueno')?.value }}% - {{ (configForm.get('escalaExcelente')?.value || 90) - 1 }}%</small>
+        </div>
+
+        <div class="form-group">
+          <label for="escalaRegular">
+            <span class="badge badge-regular">Regular</span>
+          </label>
+          <input
+            type="number"
+            id="escalaRegular"
+            formControlName="escalaRegular"
+            min="0"
+            max="100"
+            class="form-control">
+          <small>{{ configForm.get('escalaRegular')?.value }}% - {{ (configForm.get('escalaBueno')?.value || 75) - 1 }}%</small>
+        </div>
+
+        <div class="form-group">
+          <label>
+            <span class="badge badge-desaprobado">Desaprobado</span>
+          </label>
+          <input
+            type="number"
+            [value]="configForm.get('notaMinima')?.value || 0"
+            disabled
+            class="form-control">
+          <small>< {{ configForm.get('notaMinima')?.value }}%</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botones de Acción -->
+    <div class="form-actions">
+      <button type="button" class="btn-secondary" (click)="volver()" [disabled]="loading">
+        Cancelar
+      </button>
+      <button type="submit" class="btn-primary" [disabled]="configForm.invalid || loading">
+        <i class="fas fa-save"></i>
+        {{ loading ? 'Guardando...' : (isEdit ? 'Actualizar' : 'Guardar') }} Configuración
+      </button>
+    </div>
+
+  </form>
+</div>

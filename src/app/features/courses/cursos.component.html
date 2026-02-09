@@ -1,0 +1,326 @@
+<div class="cursos-container">
+  <!-- Header -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" style="cursor: pointer;" (click)="goToDashboard()">
+        <img src="assets/img/logo.svg" alt="Logo" height="40">
+      </a>
+      <div class="d-flex align-items-center">
+        <button class="btn btn-outline-light btn-sm me-2" (click)="goBack()">
+          <i class="fas fa-arrow-left"></i> Volver
+        </button>
+        <button class="btn btn-outline-light btn-sm" (click)="logout()">
+          <i class="fas fa-sign-out-alt"></i> Salir
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="container-fluid py-4">
+    <!-- Título -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <h2><i class="fas fa-book"></i> Gestión de Cursos</h2>
+        <p class="text-muted">Administra todos los cursos del sistema</p>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="row mb-4">
+      <div class="col-md-6 mb-3">
+        <div class="input-group">
+          <span class="input-group-text"><i class="fas fa-search"></i></span>
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Buscar por título o descripción..."
+            [(ngModel)]="searchTerm"
+            (ngModelChange)="applyFilters()">
+        </div>
+      </div>
+      <div class="col-md-4 mb-3">
+        <select
+          class="form-select"
+          [(ngModel)]="filterStatus"
+          (ngModelChange)="applyFilters()">
+          <option value="todos">Todos los estados</option>
+          <option value="activos">Activos</option>
+          <option value="inactivos">Inactivos</option>
+        </select>
+      </div>
+      <div class="col-md-2 mb-3">
+        <button class="btn btn-primary w-100" (click)="openCreateModal()">
+          <i class="fas fa-plus"></i> Nuevo Curso
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Cargando...</span>
+      </div>
+      <p class="mt-2">Cargando cursos...</p>
+    </div>
+
+    <!-- Tabla de Cursos -->
+    <div *ngIf="!loading" class="row">
+      <div class="col-12">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Curso</th>
+                    <th>Profesor</th>
+                    <th>Estado</th>
+                    <th>Estudiantes</th>
+                    <th>Fecha Creación</th>
+                    <th class="text-center">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let curso of cursosFiltrados">
+                    <td>
+                      <div class="d-flex align-items-center">
+                        <img
+                          *ngIf="curso.imagen"
+                          [src]="curso.imagen"
+                          [alt]="curso.titulo"
+                          class="course-img me-2">
+                        <div class="course-placeholder me-2" *ngIf="!curso.imagen">
+                          <i class="fas fa-book"></i>
+                        </div>
+                        <div>
+                          <strong>{{ curso.titulo }}</strong>
+                          <p class="text-muted small mb-0">{{ curso.descripcion }}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td>{{ curso.profesorNombre || 'Sin asignar' }}</td>
+                    <td>
+                      <span class="badge" [ngClass]="curso.activo ? 'bg-success' : 'bg-secondary'">
+                        {{ curso.activo ? 'Activo' : 'Inactivo' }}
+                      </span>
+                    </td>
+                    <td>
+                      <span class="text-muted">
+                        <i class="fas fa-users"></i> {{ curso.estudiantes.length || 0 }}
+                      </span>
+                    </td>
+                    <td>{{ curso.fechaCreacion | date:'dd/MM/yyyy' }}</td>
+                    <td class="text-center">
+                      <div class="btn-group" role="group">
+                        <button
+                          class="btn btn-sm btn-outline-info"
+                          (click)="viewSections(curso.id)"
+                          title="Ver secciones">
+                          <i class="fas fa-list-alt"></i>
+                        </button>
+                        <button
+                          class="btn btn-sm btn-outline-success"
+                          (click)="openEnrollModal(curso)"
+                          title="Inscribir estudiantes">
+                          <i class="fas fa-user-plus"></i>
+                        </button>
+                        <button
+                          class="btn btn-sm btn-outline-primary"
+                          (click)="editCourse(curso)"
+                          title="Editar">
+                          <i class="fas fa-edit"></i>
+                        </button>
+                        <button
+                          class="btn btn-sm btn-outline-warning"
+                          (click)="toggleStatus(curso)"
+                          [title]="curso.activo ? 'Desactivar' : 'Activar'">
+                          <i class="fas" [ngClass]="curso.activo ? 'fa-toggle-on' : 'fa-toggle-off'"></i>
+                        </button>
+                        <button
+                          class="btn btn-sm btn-outline-danger"
+                          (click)="deleteCourse(curso)"
+                          title="Eliminar">
+                          <i class="fas fa-trash"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr *ngIf="cursosFiltrados.length === 0">
+                    <td colspan="6" class="text-center text-muted py-4">
+                      <i class="fas fa-book fa-3x mb-3"></i>
+                      <p>No se encontraron cursos</p>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="mt-3 text-muted">
+              <small>Mostrando {{ cursosFiltrados.length }} de {{ cursos.length }} cursos</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Crear Curso -->
+<div class="modal fade" [class.show]="showCreateModal" [style.display]="showCreateModal ? 'block' : 'none'" *ngIf="showCreateModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Crear Nuevo Curso</h5>
+        <button type="button" class="btn-close" (click)="closeCreateModal()"></button>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="mb-3">
+            <label class="form-label">Título *</label>
+            <input type="text" class="form-control" [(ngModel)]="newCourse.titulo" name="titulo" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Descripción *</label>
+            <textarea class="form-control" [(ngModel)]="newCourse.descripcion" name="descripcion" rows="3" required></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Profesor</label>
+            <select class="form-select" [(ngModel)]="newCourse.profesorId" name="profesorId">
+              <option value="">Sin asignar</option>
+              <option *ngFor="let profesor of profesores" [value]="profesor.id">
+                {{ profesor.nombre }} {{ profesor.apellido }}
+              </option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Imagen del Curso</label>
+            <div class="text-center mb-2" *ngIf="imagePreviewCreate">
+              <img [src]="imagePreviewCreate" class="img-thumbnail" style="max-width: 200px; max-height: 200px; object-fit: cover;">
+            </div>
+            <input
+              type="file"
+              class="form-control"
+              accept="image/*"
+              (change)="onImageSelectedCreate($event)"
+              [disabled]="uploadingImage">
+            <small class="text-muted">Formatos: JPG, PNG, GIF, WEBP (Máx. 5MB)</small>
+            <div *ngIf="uploadingImage" class="mt-2">
+              <div class="spinner-border spinner-border-sm text-primary" role="status">
+                <span class="visually-hidden">Subiendo...</span>
+              </div>
+              <small class="ms-2">Subiendo imagen...</small>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeCreateModal()">Cancelar</button>
+        <button type="button" class="btn btn-primary" (click)="createCourse()">Crear Curso</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade" [class.show]="showCreateModal" *ngIf="showCreateModal"></div>
+
+<!-- Modal de Editar Curso -->
+<div class="modal fade" [class.show]="showEditModal" [style.display]="showEditModal ? 'block' : 'none'" *ngIf="showEditModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Editar Curso</h5>
+        <button type="button" class="btn-close" (click)="closeEditModal()"></button>
+      </div>
+      <div class="modal-body" *ngIf="selectedCourse">
+        <form>
+          <div class="mb-3">
+            <label class="form-label">Título</label>
+            <input type="text" class="form-control" [(ngModel)]="selectedCourse.titulo" name="titulo">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Descripción</label>
+            <textarea class="form-control" [(ngModel)]="selectedCourse.descripcion" name="descripcion" rows="3"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Profesor</label>
+            <select class="form-select" [(ngModel)]="selectedCourse.profesorId" name="profesorId">
+              <option value="">Sin asignar</option>
+              <option *ngFor="let profesor of profesores" [value]="profesor.id">
+                {{ profesor.nombre }} {{ profesor.apellido }}
+              </option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Imagen del Curso</label>
+            <div class="text-center mb-2" *ngIf="imagePreviewEdit">
+              <img [src]="imagePreviewEdit" class="img-thumbnail" style="max-width: 200px; max-height: 200px; object-fit: cover;">
+            </div>
+            <input
+              type="file"
+              class="form-control"
+              accept="image/*"
+              (change)="onImageSelectedEdit($event)"
+              [disabled]="uploadingImage">
+            <small class="text-muted">Formatos: JPG, PNG, GIF, WEBP (Máx. 5MB)</small>
+            <div *ngIf="uploadingImage" class="mt-2">
+              <div class="spinner-border spinner-border-sm text-primary" role="status">
+                <span class="visually-hidden">Subiendo...</span>
+              </div>
+              <small class="ms-2">Subiendo imagen...</small>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeEditModal()">Cancelar</button>
+        <button type="button" class="btn btn-primary" (click)="saveCourse()">Guardar Cambios</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade" [class.show]="showEditModal" *ngIf="showEditModal"></div>
+
+<!-- Modal de Inscripción de Estudiantes -->
+<div class="modal fade" [class.show]="showEnrollModal" [style.display]="showEnrollModal ? 'block' : 'none'" *ngIf="showEnrollModal">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Inscribir Estudiantes - {{ selectedCourse?.titulo }}</h5>
+        <button type="button" class="btn-close" (click)="closeEnrollModal()"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted">Selecciona los estudiantes que deseas inscribir en este curso:</p>
+        <div class="list-group" style="max-height: 400px; overflow-y: auto;">
+          <label
+            *ngFor="let estudiante of estudiantes"
+            class="list-group-item list-group-item-action d-flex align-items-center">
+            <input
+              type="checkbox"
+              class="form-check-input me-3"
+              [checked]="isStudentSelected(estudiante.id)"
+              (change)="toggleStudentSelection(estudiante.id)">
+            <div class="user-avatar-img me-2" *ngIf="estudiante.fotoPerfil">
+              <img [src]="estudiante.fotoPerfil" [alt]="estudiante.nombre" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+            </div>
+            <div class="user-avatar me-2" *ngIf="!estudiante.fotoPerfil">
+              {{ estudiante.nombre.charAt(0) }}{{ estudiante.apellido.charAt(0) }}
+            </div>
+            <div>
+              <strong>{{ estudiante.nombre }} {{ estudiante.apellido }}</strong>
+              <p class="mb-0 small text-muted">{{ estudiante.email }}</p>
+            </div>
+          </label>
+        </div>
+        <div class="mt-3">
+          <small class="text-muted">{{ selectedStudents.length }} estudiante(s) seleccionado(s)</small>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeEnrollModal()">Cancelar</button>
+        <button type="button" class="btn btn-primary" (click)="saveEnrollment()">
+          Guardar Inscripciones
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade" [class.show]="showEnrollModal" *ngIf="showEnrollModal"></div>

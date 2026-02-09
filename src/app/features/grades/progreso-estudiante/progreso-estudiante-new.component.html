@@ -1,0 +1,183 @@
+<div class="progreso-container-new">
+  <!-- Header -->
+  <div class="header">
+    <button class="btn-back" (click)="volver()">
+      <i class="fas fa-arrow-left"></i> Volver al Curso
+    </button>
+    <h1><i class="fas fa-chart-line"></i> Mis Calificaciones y Progreso</h1>
+    <p class="curso-titulo">{{ cursoTitulo }}</p>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading" *ngIf="loading">
+    <i class="fas fa-spinner fa-spin"></i>
+    <p>Cargando calificaciones...</p>
+  </div>
+
+  <!-- Content -->
+  <div class="content-new" *ngIf="!loading && calificacion && configuracion">
+
+    <!-- Tabla Principal de Calificaciones -->
+    <div class="tabla-calificaciones-section">
+      <h2><i class="fas fa-table"></i> Resumen de Calificaciones</h2>
+
+      <div class="tabla-wrapper">
+        <table class="tabla-notas">
+          <thead>
+            <tr>
+              <th>Componente</th>
+              <th class="text-center">Nota Obtenida</th>
+              <th class="text-center">Ponderación</th>
+              <th class="text-center">Nota Ponderada</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Tareas -->
+            <tr>
+              <td class="componente">
+                <i class="fas fa-tasks icon-tareas"></i>
+                <span>Tareas</span>
+              </td>
+              <td class="text-center nota-obtenida" [class]="getCalificacionClase(calificacion.promedioTareas)">
+                {{ calificacion.promedioTareas | number:'1.0-2' }}
+              </td>
+              <td class="text-center ponderacion">
+                {{ configuracion.ponderacionTareas }}%
+              </td>
+              <td class="text-center nota-ponderada">
+                {{ (calificacion.promedioTareas * configuracion.ponderacionTareas / 100) | number:'1.0-2' }}
+              </td>
+            </tr>
+
+            <!-- Exámenes Prácticos -->
+            <tr>
+              <td class="componente">
+                <i class="fas fa-file-alt icon-examenes"></i>
+                <span>Exámenes Prácticos</span>
+              </td>
+              <td class="text-center nota-obtenida" [class]="getCalificacionClase(calificacion.promedioExamenes)">
+                {{ calificacion.promedioExamenes | number:'1.0-2' }}
+              </td>
+              <td class="text-center ponderacion">
+                {{ configuracion.ponderacionExamenes }}%
+              </td>
+              <td class="text-center nota-ponderada">
+                {{ (calificacion.promedioExamenes * configuracion.ponderacionExamenes / 100) | number:'1.0-2' }}
+              </td>
+            </tr>
+
+            <!-- Examen Final -->
+            <tr *ngIf="configuracion.ponderacionExamenFinal && configuracion.ponderacionExamenFinal > 0">
+              <td class="componente">
+                <i class="fas fa-star icon-examen-final"></i>
+                <span>Examen Final</span>
+              </td>
+              <td class="text-center nota-obtenida" [class]="getCalificacionClase(calificacion.promedioExamenFinal || 0)">
+                {{ (calificacion.promedioExamenFinal || 0) | number:'1.0-2' }}
+              </td>
+              <td class="text-center ponderacion">
+                {{ configuracion.ponderacionExamenFinal }}%
+              </td>
+              <td class="text-center nota-ponderada">
+                {{ ((calificacion.promedioExamenFinal || 0) * configuracion.ponderacionExamenFinal / 100) | number:'1.0-2' }}
+              </td>
+            </tr>
+
+            <!-- Asistencia -->
+            <tr *ngIf="configuracion.ponderacionAsistencia && configuracion.ponderacionAsistencia > 0">
+              <td class="componente">
+                <i class="fas fa-user-check icon-asistencia"></i>
+                <span>Asistencia</span>
+              </td>
+              <td class="text-center nota-obtenida" [class]="getCalificacionClase(porcentajeAsistencia)">
+                {{ porcentajeAsistencia | number:'1.0-0' }}
+              </td>
+              <td class="text-center ponderacion">
+                {{ configuracion.ponderacionAsistencia }}%
+              </td>
+              <td class="text-center nota-ponderada">
+                {{ (porcentajeAsistencia * configuracion.ponderacionAsistencia / 100) | number:'1.0-2' }}
+              </td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr class="fila-total">
+              <td colspan="3" class="text-right">
+                <strong>CALIFICACIÓN FINAL:</strong>
+              </td>
+              <td class="text-center calificacion-final" [class]="getCalificacionClase(calificacion.calificacionFinal)">
+                <strong>{{ calificacion.calificacionFinal | number:'1.0-2' }}</strong>
+              </td>
+            </tr>
+            <tr class="fila-estado">
+              <td colspan="4" class="text-center">
+                <span class="badge-estado" [class]="getEstadoClase()">
+                  <i class="fas" [class]="getEstadoIcono()"></i>
+                  {{ getEstadoTexto() }}
+                </span>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- Sección de Estadísticas (Secundaria) -->
+    <div class="seccion-secundaria" *ngIf="progreso">
+      <h3><i class="fas fa-chart-pie"></i> Estadísticas Detalladas</h3>
+
+      <div class="stats-grid-compact">
+        <!-- Avance General -->
+        <div class="stat-card-compact">
+          <div class="stat-icon-compact">
+            <i class="fas fa-tasks"></i>
+          </div>
+          <div class="stat-content-compact">
+            <div class="stat-numero-compact">{{ progreso.porcentajeAvance }}%</div>
+            <div class="stat-label-compact">Avance General</div>
+          </div>
+        </div>
+
+        <!-- Tareas -->
+        <div class="stat-card-compact">
+          <div class="stat-icon-compact tareas">
+            <i class="fas fa-tasks"></i>
+          </div>
+          <div class="stat-content-compact">
+            <div class="stat-numero-compact">{{ progreso.tareasEntregadas.length }} / {{ progreso.tareasTotales }}</div>
+            <div class="stat-label-compact">Tareas Entregadas</div>
+          </div>
+        </div>
+
+        <!-- Exámenes -->
+        <div class="stat-card-compact">
+          <div class="stat-icon-compact examenes">
+            <i class="fas fa-file-alt"></i>
+          </div>
+          <div class="stat-content-compact">
+            <div class="stat-numero-compact">{{ progreso.examenesRealizados.length }} / {{ progreso.examenesTotales }}</div>
+            <div class="stat-label-compact">Exámenes Realizados</div>
+          </div>
+        </div>
+
+        <!-- Asistencias -->
+        <div class="stat-card-compact" *ngIf="configuracion.ponderacionAsistencia && configuracion.ponderacionAsistencia > 0">
+          <div class="stat-icon-compact asistencia">
+            <i class="fas fa-user-check"></i>
+          </div>
+          <div class="stat-content-compact">
+            <div class="stat-numero-compact">{{ totalAsistencias }}</div>
+            <div class="stat-label-compact">Registros de Asistencia</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gráfico Compacto -->
+      <div class="grafico-compacto" *ngIf="chart">
+        <h4>Distribución de Calificaciones</h4>
+        <canvas #chartCanvas style="max-height: 200px;"></canvas>
+      </div>
+    </div>
+
+  </div>
+</div>

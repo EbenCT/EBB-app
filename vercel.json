@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "name": "escuela-biblica-cavevid",
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist/escuela-biblica-app/browser"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
+}

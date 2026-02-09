@@ -1,0 +1,53 @@
+/* Estilos para Registro de Asistencia */
+
+.table-responsive {
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.btn-sm {
+  min-width: 40px;
+  min-height: 40px;
+}
+
+/* Mejoras de responsive */
+@media (max-width: 768px) {
+  .table {
+    font-size: 0.875rem;
+  }
+
+  .btn-sm {
+    min-width: 35px;
+    min-height: 35px;
+    padding: 0.25rem;
+  }
+
+  th, td {
+    padding: 0.5rem !important;
+  }
+}
+
+/* Estados de botones */
+.btn-success:focus,
+.btn-warning:focus,
+.btn-danger:focus,
+.btn-info:focus {
+  box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.25);
+}
+
+/* Animación al guardar */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.btn-primary:active {
+  animation: pulse 0.3s ease-in-out;
+}

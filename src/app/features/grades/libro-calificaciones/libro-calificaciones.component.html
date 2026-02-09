@@ -1,0 +1,225 @@
+<div class="libro-container">
+  <div class="header">
+    <button class="btn-back" (click)="volver()">
+      <i class="fas fa-arrow-left"></i> Volver
+    </button>
+    <div class="header-content">
+      <h1><i class="fas fa-book"></i> Libro de Calificaciones</h1>
+      <p class="curso-titulo" *ngIf="libro">{{ libro.cursoTitulo }}</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-config" (click)="configurar()">
+        <i class="fas fa-cog"></i> Configurar
+      </button>
+      <button class="btn-export" (click)="exportarExcel()">
+        <i class="fas fa-file-excel"></i> Exportar
+      </button>
+    </div>
+  </div>
+
+  <!-- Estadísticas -->
+  <div class="estadisticas" *ngIf="estadisticas && !loading">
+    <div class="stat-card">
+      <i class="fas fa-users"></i>
+      <div class="stat-info">
+        <span class="stat-value">{{ estadisticas.total }}</span>
+        <span class="stat-label">Estudiantes</span>
+      </div>
+    </div>
+    <div class="stat-card aprobados">
+      <i class="fas fa-check-circle"></i>
+      <div class="stat-info">
+        <span class="stat-value">{{ estadisticas.aprobados }}</span>
+        <span class="stat-label">Aprobados</span>
+      </div>
+    </div>
+    <div class="stat-card desaprobados">
+      <i class="fas fa-times-circle"></i>
+      <div class="stat-info">
+        <span class="stat-value">{{ estadisticas.desaprobados }}</span>
+        <span class="stat-label">Desaprobados</span>
+      </div>
+    </div>
+    <div class="stat-card progreso">
+      <i class="fas fa-hourglass-half"></i>
+      <div class="stat-info">
+        <span class="stat-value">{{ estadisticas.enProgreso }}</span>
+        <span class="stat-label">En Progreso</span>
+      </div>
+    </div>
+    <div class="stat-card promedio">
+      <i class="fas fa-chart-line"></i>
+      <div class="stat-info">
+        <span class="stat-value">{{ estadisticas.promedio }}%</span>
+        <span class="stat-label">Promedio General</span>
+      </div>
+    </div>
+    <div class="stat-card tasa">
+      <i class="fas fa-percentage"></i>
+      <div class="stat-info">
+        <span class="stat-value">{{ estadisticas.tasaAprobacion }}%</span>
+        <span class="stat-label">Tasa Aprobación</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filtros" *ngIf="!loading">
+    <div class="filtro-estado">
+      <label>Estado:</label>
+      <select [(ngModel)]="filtroEstado" class="form-control">
+        <option value="todos">Todos</option>
+        <option value="aprobado">Aprobados</option>
+        <option value="desaprobado">Desaprobados</option>
+        <option value="en_progreso">En Progreso</option>
+      </select>
+    </div>
+    <div class="filtro-busqueda">
+      <i class="fas fa-search"></i>
+      <input
+        type="text"
+        [(ngModel)]="busqueda"
+        placeholder="Buscar por nombre o email..."
+        class="form-control">
+    </div>
+    <button class="btn-toggle-grafico" (click)="toggleGrafico()">
+      <i class="fas" [class.fa-chart-bar]="!mostrarGrafico" [class.fa-table]="mostrarGrafico"></i>
+      {{ mostrarGrafico ? 'Ocultar' : 'Mostrar' }} Gráfico
+    </button>
+  </div>
+
+  <!-- Gráfico de Distribución -->
+  <div class="grafico-container" *ngIf="!loading && libro && mostrarGrafico">
+    <canvas #chartCanvas></canvas>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading" *ngIf="loading">
+    <i class="fas fa-spinner fa-spin"></i>
+    <p>Cargando calificaciones...</p>
+  </div>
+
+  <!-- Tabla de Calificaciones -->
+  <div class="tabla-container" *ngIf="!loading && libro">
+    <table class="tabla-calificaciones">
+      <thead>
+        <tr>
+          <th class="sticky-col">Estudiante</th>
+          <th class="sticky-col-2">Email</th>
+
+          <!-- Columnas de Tareas -->
+          <th *ngFor="let col of libro.columnas"
+              [class.col-tarea]="col.tipo === 'tarea'"
+              [class.col-examen]="col.tipo === 'examen'">
+            <div class="header-content">
+              <i [class.fas]="true"
+                 [class.fa-tasks]="col.tipo === 'tarea'"
+                 [class.fa-file-alt]="col.tipo === 'examen'"></i>
+              {{ col.titulo }}
+            </div>
+            <small>{{ col.tipo === 'tarea' ? 'Tarea' : 'Examen' }}</small>
+          </th>
+
+          <!-- Columnas de Resumen -->
+          <th class="col-promedio">Promedio Tareas</th>
+          <th class="col-promedio">Promedio Exámenes</th>
+          <th class="col-promedio examen-final" *ngIf="libro.configuracion.ponderacionExamenFinal && libro.configuracion.ponderacionExamenFinal > 0">
+            <div class="header-content">
+              <i class="fas fa-star"></i>
+              Examen Final
+            </div>
+            <small>{{ libro.configuracion.ponderacionExamenFinal }}%</small>
+          </th>
+          <th class="col-promedio" *ngIf="libro.configuracion.ponderacionAsistencia && libro.configuracion.ponderacionAsistencia > 0">
+            <div class="header-content">
+              <i class="fas fa-user-check"></i>
+              Asistencia
+            </div>
+            <small>{{ libro.configuracion.ponderacionAsistencia }}%</small>
+          </th>
+          <th class="col-final">Calificación Final</th>
+          <th class="col-estado">Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let estudiante of estudiantesFiltrados">
+          <td class="sticky-col estudiante-nombre">
+            {{ estudiante.nombreEstudiante }}
+          </td>
+          <td class="sticky-col-2 estudiante-email">
+            {{ estudiante.email }}
+          </td>
+
+          <!-- Calificaciones de Tareas -->
+          <td *ngFor="let col of libro.columnas"
+              [class.col-tarea]="col.tipo === 'tarea'"
+              [class.col-examen]="col.tipo === 'examen'">
+            <span *ngIf="col.tipo === 'tarea' && estudiante.tareas[col.id] !== null; else sinCalificacion">
+              <span [class]="getCalificacionClase(estudiante.tareas[col.id])">
+                {{ estudiante.tareas[col.id] }}
+              </span>
+            </span>
+            <span *ngIf="col.tipo === 'examen' && estudiante.examenes[col.id] !== null; else sinCalificacion">
+              <span [class]="getCalificacionClase(estudiante.examenes[col.id])">
+                {{ estudiante.examenes[col.id] }}
+              </span>
+            </span>
+            <ng-template #sinCalificacion>
+              <span class="sin-calificacion">-</span>
+            </ng-template>
+          </td>
+
+          <!-- Promedios y Final -->
+          <td class="col-promedio">
+            <span [class]="getCalificacionClase(estudiante.promedioTareas)">
+              {{ estudiante.promedioTareas | number:'1.0-2' }}
+            </span>
+          </td>
+          <td class="col-promedio">
+            <span [class]="getCalificacionClase(estudiante.promedioExamenes)">
+              {{ estudiante.promedioExamenes | number:'1.0-2' }}
+            </span>
+          </td>
+          <td class="col-promedio examen-final" *ngIf="libro.configuracion.ponderacionExamenFinal && libro.configuracion.ponderacionExamenFinal > 0">
+            <span [class]="getCalificacionClase(estudiante.calificacionExamenFinal || 0)">
+              {{ (estudiante.calificacionExamenFinal || 0) | number:'1.0-2' }}
+            </span>
+          </td>
+          <td class="col-promedio" *ngIf="libro.configuracion.ponderacionAsistencia && libro.configuracion.ponderacionAsistencia > 0">
+            <span [class]="getCalificacionClase(estudiante.promedioAsistencia || 0)">
+              {{ (estudiante.promedioAsistencia || 0) | number:'1.0-2' }}
+            </span>
+            <small class="text-muted d-block" style="font-size: 0.75rem;">
+              ({{ estudiante.totalAsistencias || 0 }} reg.)
+            </small>
+          </td>
+          <td class="col-final">
+            <strong [class]="getCalificacionClase(estudiante.calificacionFinal)">
+              {{ estudiante.calificacionFinal | number:'1.0-2' }}
+            </strong>
+          </td>
+          <td class="col-estado">
+            <span [class]="'badge ' + getEstadoClase(estudiante.estado)">
+              {{ getEstadoTexto(estudiante.estado) }}
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="no-resultados" *ngIf="estudiantesFiltrados.length === 0">
+      <i class="fas fa-search"></i>
+      <p>No se encontraron estudiantes con los filtros aplicados</p>
+    </div>
+  </div>
+
+  <!-- Sin Configuración -->
+  <div class="sin-config" *ngIf="!loading && !libro">
+    <i class="fas fa-cog"></i>
+    <h2>No hay configuración de calificaciones</h2>
+    <p>Debes configurar las ponderaciones del curso primero</p>
+    <button class="btn-primary" (click)="configurar()">
+      <i class="fas fa-cog"></i> Configurar Ahora
+    </button>
+  </div>
+</div>

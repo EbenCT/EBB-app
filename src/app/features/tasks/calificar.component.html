@@ -1,0 +1,191 @@
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+  <div class="container-fluid">
+    <button class="btn btn-outline-light me-2" (click)="goBack()">
+      <i class="fas fa-arrow-left"></i> Volver
+    </button>
+    <span class="navbar-brand mb-0 h1" style="cursor: pointer;" (click)="goToDashboard()">
+      <i class="fas fa-star"></i> Calificar Entrega
+    </span>
+    <button class="btn btn-outline-light" (click)="logout()">
+      <i class="fas fa-sign-out-alt"></i> Salir
+    </button>
+  </div>
+</nav>
+
+<div class="container-fluid mt-4" *ngIf="tarea && entrega">
+  <div class="row">
+    <div class="col-12">
+      <!-- Información de la Tarea -->
+      <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-clipboard-list"></i> {{ tarea.titulo }}
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <p><strong>Descripción:</strong> {{ tarea.descripcion || 'Sin descripción' }}</p>
+              <p><strong>Instrucciones:</strong> {{ tarea.instrucciones || 'Sin instrucciones' }}</p>
+            </div>
+            <div class="col-md-6">
+              <p><strong>Tipo de entrega:</strong>
+                <span class="badge bg-secondary">{{ getTipoEntregaText(tarea.tipoEntrega) }}</span>
+              </p>
+              <p><strong>Ponderación:</strong>
+                <span class="badge bg-info">{{ tarea.ponderacion }}%</span>
+              </p>
+              <p><strong>Fecha límite:</strong> {{ formatDate(tarea.fechaFin) }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Información del Estudiante -->
+      <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-user"></i> Información de Entrega
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <p><strong><i class="fas fa-user-graduate"></i> Estudiante:</strong> {{ estudianteNombre }}</p>
+              <p><strong><i class="fas fa-envelope"></i> Email:</strong> {{ estudianteEmail }}</p>
+              <p><strong><i class="fas fa-calendar-check"></i> Fecha de entrega:</strong> {{ formatDate(entrega.fechaEntrega) }}</p>
+            </div>
+            <div class="col-md-6">
+              <p><strong><i class="fas fa-info-circle"></i> Estado:</strong>
+                <span class="badge" [ngClass]="getEstadoBadgeClass(entrega.estado)">
+                  {{ entrega.estado }}
+                </span>
+              </p>
+              <p *ngIf="entrega.calificacion !== undefined && entrega.calificacion !== null">
+                <strong><i class="fas fa-star"></i> Calificación actual:</strong>
+                <span class="badge bg-success fs-6">{{ entrega.calificacion }}/100</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contenido de la Entrega -->
+      <div class="card mb-4">
+        <div class="card-header bg-secondary text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-file-alt"></i> Contenido de la Entrega
+          </h5>
+        </div>
+        <div class="card-body">
+          <!-- Texto -->
+          <div *ngIf="entrega.contenidoTexto" class="mb-3">
+            <h6>Respuesta en texto:</h6>
+            <div class="border p-3 bg-light rounded">
+              <p class="mb-0" style="white-space: pre-wrap;">{{ entrega.contenidoTexto }}</p>
+            </div>
+          </div>
+
+          <!-- Archivos -->
+          <div *ngIf="entrega.archivos && entrega.archivos.length > 0">
+            <h6>Archivos adjuntos:</h6>
+            <ul class="list-group">
+              <li class="list-group-item" *ngFor="let archivo of entrega.archivos">
+                <i class="fas fa-file"></i>
+                <a [href]="archivo" target="_blank" class="ms-2">{{ archivo }}</a>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Sin contenido -->
+          <div *ngIf="!entrega.contenidoTexto && (!entrega.archivos || entrega.archivos.length === 0)"
+               class="text-muted text-center py-3">
+            <i class="fas fa-inbox fa-2x mb-2"></i>
+            <p>No se ha entregado contenido</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formulario de Calificación -->
+      <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-star"></i> Calificación
+          </h5>
+        </div>
+        <div class="card-body">
+          <form>
+            <div class="row">
+              <div class="col-md-3 mb-3">
+                <label class="form-label">Calificación (0-100) *</label>
+                <input
+                  type="number"
+                  class="form-control"
+                  [(ngModel)]="calificacion"
+                  name="calificacion"
+                  min="0"
+                  max="100"
+                  required>
+                <small class="text-muted">
+                  Ponderación: {{ tarea.ponderacion }}% = {{ (calificacion * tarea.ponderacion / 100).toFixed(2) }} puntos
+                </small>
+              </div>
+              <div class="col-md-9 mb-3">
+                <label class="form-label">Retroalimentación</label>
+                <textarea
+                  class="form-control"
+                  [(ngModel)]="retroalimentacion"
+                  name="retroalimentacion"
+                  rows="4"
+                  placeholder="Escribe comentarios y sugerencias para el estudiante..."></textarea>
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                (click)="goBack()"
+                [disabled]="loading">
+                Cancelar
+              </button>
+              <button
+                type="button"
+                class="btn btn-success"
+                (click)="saveGrade()"
+                [disabled]="loading || calificacion < 0 || calificacion > 100">
+                <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+                <i *ngIf="!loading" class="fas fa-save me-2"></i>
+                Guardar Calificación
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Calificación anterior (si existe) -->
+      <div class="card mb-4" *ngIf="entrega.calificacion !== undefined && entrega.estado === 'calificada'">
+        <div class="card-header bg-warning">
+          <h6 class="mb-0">
+            <i class="fas fa-info-circle"></i> Calificación Anterior
+          </h6>
+        </div>
+        <div class="card-body">
+          <p><strong>Calificación:</strong> {{ entrega.calificacion }}/100</p>
+          <p *ngIf="entrega.retroalimentacion"><strong>Retroalimentación:</strong> {{ entrega.retroalimentacion }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading state -->
+<div class="container-fluid mt-4" *ngIf="!tarea || !entrega">
+  <div class="text-center">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Cargando...</span>
+    </div>
+    <p class="mt-3">Cargando entrega...</p>
+  </div>
+</div>

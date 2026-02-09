@@ -1,0 +1,1399 @@
+<div class="container-fluid py-4">
+  <!-- Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h2 class="mb-1">
+            <i class="fas fa-home me-2"></i>Configuración del Home
+          </h2>
+          <p class="text-muted mb-0">
+            <i class="fas fa-cog me-1"></i>
+            FASE 3 - Hero, Cursos, Portfolio/Materias y About/Timeline
+          </p>
+        </div>
+        <div>
+          <button class="btn btn-outline-secondary me-2" (click)="volverAdmin()">
+            <i class="fas fa-arrow-left me-1"></i>Volver
+          </button>
+          <button class="btn btn-info" (click)="verVistaPrevia()">
+            <i class="fas fa-eye me-1"></i>Vista Previa
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs de Navegación -->
+  <div class="row mb-4" *ngIf="!loading">
+    <div class="col-12">
+      <ul class="nav nav-tabs">
+        <li class="nav-item">
+          <a class="nav-link"
+             [class.active]="tabActiva === 'hero'"
+             (click)="cambiarTab('hero')"
+             style="cursor: pointer;">
+            <i class="fas fa-image me-2"></i>Hero/Masthead
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link"
+             [class.active]="tabActiva === 'cursos'"
+             (click)="cambiarTab('cursos')"
+             style="cursor: pointer;">
+            <i class="fas fa-graduation-cap me-2"></i>Sección Cursos
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link"
+             [class.active]="tabActiva === 'portfolio'"
+             (click)="cambiarTab('portfolio')"
+             style="cursor: pointer;">
+            <i class="fas fa-th me-2"></i>Portfolio / Materias
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link"
+             [class.active]="tabActiva === 'about'"
+             (click)="cambiarTab('about')"
+             style="cursor: pointer;">
+            <i class="fas fa-timeline me-2"></i>About / Timeline
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link"
+             [class.active]="tabActiva === 'profesores'"
+             (click)="cambiarTab('profesores')"
+             style="cursor: pointer;">
+            <i class="fas fa-chalkboard-teacher me-2"></i>Profesores
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link"
+             [class.active]="tabActiva === 'inscripcion'"
+             (click)="cambiarTab('inscripcion')"
+             style="cursor: pointer;">
+            <i class="fas fa-user-plus me-2"></i>Inscripción
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link"
+             [class.active]="tabActiva === 'footer'"
+             (click)="cambiarTab('footer')"
+             style="cursor: pointer;">
+            <i class="fas fa-info-circle me-2"></i>Footer
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Mensajes -->
+  <div class="row mb-3" *ngIf="mensaje">
+    <div class="col-12">
+      <div class="alert alert-dismissible fade show"
+           [class.alert-success]="mensaje.tipo === 'success'"
+           [class.alert-danger]="mensaje.tipo === 'error'"
+           [class.alert-info]="mensaje.tipo === 'info'"
+           role="alert">
+        <i class="fas fa-check-circle me-2" *ngIf="mensaje.tipo === 'success'"></i>
+        <i class="fas fa-exclamation-circle me-2" *ngIf="mensaje.tipo === 'error'"></i>
+        <i class="fas fa-info-circle me-2" *ngIf="mensaje.tipo === 'info'"></i>
+        {{ mensaje.texto }}
+        <button type="button" class="btn-close" (click)="mensaje = null"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="row" *ngIf="loading">
+    <div class="col-12">
+      <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Cargando...</span>
+        </div>
+        <p class="mt-3 text-muted">Cargando configuración...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulario Hero -->
+  <div class="row" *ngIf="!loading && tabActiva === 'hero'">
+    <div class="col-lg-8 mx-auto">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-edit me-2"></i>Editar Hero/Masthead
+          </h5>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="heroForm" (ngSubmit)="guardarCambios()">
+
+            <!-- Subtítulo 1 -->
+            <div class="mb-4">
+              <label for="subtitulo1" class="form-label fw-bold">
+                <i class="fas fa-heading me-2"></i>Subtítulo 1
+              </label>
+              <input
+                type="text"
+                class="form-control"
+                id="subtitulo1"
+                formControlName="subtitulo1"
+                placeholder="¡Desarrolla tu fe!"
+                [class.is-invalid]="heroForm.get('subtitulo1')?.invalid && heroForm.get('subtitulo1')?.touched">
+              <div class="form-text">
+                Primer texto que aparece en el banner principal
+              </div>
+              <div class="invalid-feedback">
+                Este campo es requerido
+              </div>
+            </div>
+
+            <!-- Subtítulo 2 (Horario) -->
+            <div class="mb-4">
+              <label for="subtitulo2" class="form-label fw-bold">
+                <i class="fas fa-clock me-2"></i>Subtítulo 2 (Horario)
+              </label>
+              <input
+                type="text"
+                class="form-control"
+                id="subtitulo2"
+                formControlName="subtitulo2"
+                placeholder="CLASES TODOS LOS DOMINGOS A LAS 18:00PM"
+                [class.is-invalid]="heroForm.get('subtitulo2')?.invalid && heroForm.get('subtitulo2')?.touched">
+              <div class="form-text">
+                Información del horario de clases
+              </div>
+              <div class="invalid-feedback">
+                Este campo es requerido
+              </div>
+            </div>
+
+            <!-- Título Principal -->
+            <div class="mb-4">
+              <label for="titulo" class="form-label fw-bold">
+                <i class="fas fa-font me-2"></i>Título Principal
+              </label>
+              <input
+                type="text"
+                class="form-control form-control-lg"
+                id="titulo"
+                formControlName="titulo"
+                placeholder="ESCUELA BÍBLICA CAVEVID"
+                [class.is-invalid]="heroForm.get('titulo')?.invalid && heroForm.get('titulo')?.touched">
+              <div class="form-text">
+                Título grande en mayúsculas
+              </div>
+              <div class="invalid-feedback">
+                Este campo es requerido
+              </div>
+            </div>
+
+            <!-- Texto del Botón -->
+            <div class="mb-4">
+              <label for="botonTexto" class="form-label fw-bold">
+                <i class="fas fa-mouse-pointer me-2"></i>Texto del Botón
+              </label>
+              <input
+                type="text"
+                class="form-control"
+                id="botonTexto"
+                formControlName="botonTexto"
+                placeholder="Ver cursos"
+                [class.is-invalid]="heroForm.get('botonTexto')?.invalid && heroForm.get('botonTexto')?.touched">
+              <div class="form-text">
+                Texto que aparece en el botón del hero
+              </div>
+              <div class="invalid-feedback">
+                Este campo es requerido
+              </div>
+            </div>
+
+            <!-- Link del Botón -->
+            <div class="mb-4">
+              <label for="botonLink" class="form-label fw-bold">
+                <i class="fas fa-link me-2"></i>Link del Botón
+              </label>
+              <input
+                type="text"
+                class="form-control"
+                id="botonLink"
+                formControlName="botonLink"
+                placeholder="#services"
+                [class.is-invalid]="heroForm.get('botonLink')?.invalid && heroForm.get('botonLink')?.touched">
+              <div class="form-text">
+                Hacia dónde lleva el botón (use # para anclas internas)
+              </div>
+              <div class="invalid-feedback">
+                Este campo es requerido
+              </div>
+            </div>
+
+            <!-- Imagen de Fondo (Cloudinary) -->
+            <div class="mb-4">
+              <label class="form-label fw-bold">
+                <i class="fas fa-image me-2"></i>Imagen de Fondo (Opcional)
+              </label>
+
+              <div class="card border" *ngIf="config?.hero?.imagenFondo">
+                <div class="card-body">
+                  <div class="row align-items-center">
+                    <div class="col-md-3">
+                      <img [src]="config?.hero?.imagenFondo || ''" class="img-fluid rounded" alt="Imagen de fondo actual">
+                    </div>
+                    <div class="col-md-6">
+                      <p class="mb-1 small text-muted">Imagen actual:</p>
+                      <p class="mb-0 small">{{ config?.hero?.imagenFondo }}</p>
+                    </div>
+                    <div class="col-md-3 text-end">
+                      <button type="button" class="btn btn-sm btn-danger" (click)="eliminarImagenFondo()">
+                        <i class="fas fa-trash me-1"></i>Eliminar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Opción 1: Pegar URL -->
+              <div class="mb-2">
+                <label class="form-label small">Opción 1: Pegar URL de imagen</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="fas fa-link"></i></span>
+                  <input
+                    type="text"
+                    class="form-control"
+                    formControlName="imagenFondo"
+                    placeholder="https://res.cloudinary.com/..."
+                    [disabled]="uploadingImage">
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary"
+                    (click)="heroForm.patchValue({imagenFondo: ''})"
+                    [disabled]="!heroForm.get('imagenFondo')?.value">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Opción 2: Subir archivo -->
+              <div>
+                <label class="form-label small">Opción 2: Subir archivo a Cloudinary</label>
+                <div class="input-group">
+                  <input
+                    type="file"
+                    class="form-control"
+                    id="imagenFondo"
+                    accept="image/*"
+                    (change)="onImagenFondoSelected($event)"
+                    [disabled]="uploadingImage">
+                  <label class="input-group-text" for="imagenFondo">
+                    <i class="fas fa-upload me-1"></i>
+                    {{ uploadingImage ? 'Subiendo...' : 'Seleccionar' }}
+                  </label>
+                </div>
+              </div>
+
+              <div class="form-text mt-2">
+                <i class="fas fa-info-circle me-1"></i>
+                Puedes pegar un link existente o subir una imagen nueva. Recomendado: 1920x1080px.
+              </div>
+            </div>
+
+            <!-- Información de Última Actualización -->
+            <div class="alert alert-light border" *ngIf="config">
+              <small class="text-muted">
+                <i class="fas fa-clock me-1"></i>
+                Última actualización: {{ config.ultimaActualizacion | date:'medium' }}
+                por {{ config.actualizadoPor }}
+              </small>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="d-flex justify-content-between">
+              <div>
+                <button
+                  type="button"
+                  class="btn btn-outline-info me-2"
+                  (click)="cargarValoresPorDefecto('hero')"
+                  [disabled]="saving">
+                  <i class="fas fa-file-code me-1"></i>Cargar Valores por Defecto
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline-warning"
+                  (click)="resetearValores()"
+                  [disabled]="saving">
+                  <i class="fas fa-undo me-1"></i>Restablecer Valores
+                </button>
+              </div>
+
+              <div>
+                <button
+                  type="submit"
+                  class="btn btn-primary btn-lg"
+                  [disabled]="heroForm.invalid || saving">
+                  <span *ngIf="!saving">
+                    <i class="fas fa-save me-2"></i>Guardar Cambios
+                  </span>
+                  <span *ngIf="saving">
+                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                    Guardando...
+                  </span>
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Información Técnica Hero -->
+      <div class="card mt-4 border-info">
+        <div class="card-header bg-info text-white">
+          <h6 class="mb-0">
+            <i class="fas fa-info-circle me-2"></i>Información Técnica
+          </h6>
+        </div>
+        <div class="card-body">
+          <ul class="mb-0">
+            <li>Los cambios se aplican <strong>inmediatamente</strong> en el home</li>
+            <li>El caché se invalida automáticamente al guardar</li>
+            <li>Los visitantes verán los cambios en su próxima carga</li>
+            <li>Esta es la <strong>FASE 1</strong> - Hero y Sección Cursos</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulario Cursos -->
+  <div class="row" *ngIf="!loading && tabActiva === 'cursos'">
+    <div class="col-lg-10 mx-auto">
+      <div class="card shadow-sm">
+        <div class="card-header bg-success text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-graduation-cap me-2"></i>Editar Sección Cursos
+          </h5>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="cursosForm" (ngSubmit)="guardarCambiosCursos()">
+
+            <!-- Toggle de visibilidad -->
+            <div class="form-check form-switch mb-4">
+              <input class="form-check-input" type="checkbox" id="cursosVisible"
+                     formControlName="visible">
+              <label class="form-check-label fw-bold" for="cursosVisible">
+                <i class="fas fa-eye me-2"></i>Sección Visible en el Home
+              </label>
+            </div>
+
+            <hr>
+            <div class="row mb-4">
+              <div class="col-md-6">
+                <label for="cursosTitulo" class="form-label fw-bold">
+                  <i class="fas fa-heading me-2"></i>Título de la Sección
+                </label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="cursosTitulo"
+                  formControlName="titulo"
+                  placeholder="Cursos">
+              </div>
+              <div class="col-md-6">
+                <label for="cursosSubtitulo" class="form-label fw-bold">
+                  <i class="fas fa-text-height me-2"></i>Subtítulo
+                </label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="cursosSubtitulo"
+                  formControlName="subtitulo"
+                  placeholder="Dos niveles para elegir.">
+              </div>
+            </div>
+
+            <hr>
+
+            <!-- Lista de Cursos -->
+            <div formArrayName="cursos">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5><i class="fas fa-list me-2"></i>Cursos</h5>
+                <button type="button" class="btn btn-sm btn-success" (click)="agregarCurso()">
+                  <i class="fas fa-plus me-1"></i>Agregar Curso
+                </button>
+              </div>
+
+              <div *ngFor="let curso of cursos.controls; let i = index" class="card mb-3">
+                <div class="card-header bg-light">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">Curso {{ i + 1 }}</h6>
+                    <button type="button" class="btn btn-sm btn-danger" (click)="eliminarCurso(i)">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="card-body" [formGroupName]="i">
+                  <div class="row">
+                    <div class="col-md-4 mb-3">
+                      <label class="form-label fw-bold">Título</label>
+                      <input type="text" class="form-control" formControlName="titulo" placeholder="Básico">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                      <label class="form-label fw-bold">Subtítulo</label>
+                      <input type="text" class="form-control" formControlName="subtitulo" placeholder="Estudio Bíblico Fundamental">
+                    </div>
+                    <div class="col-md-12 mb-3">
+                      <label class="form-label fw-bold">
+                        Icono
+                        <span class="badge bg-primary ms-2">
+                          <i class="fas" [ngClass]="curso.value.icono || 'fa-question'"></i>
+                          {{ curso.value.icono ? 'Seleccionado' : 'Ninguno' }}
+                        </span>
+                      </label>
+                      <div class="border rounded p-2" style="max-height: 150px; overflow-y: auto;">
+                        <div class="row g-2">
+                          <div class="col-auto" *ngFor="let icono of iconosDisponibles">
+                            <button
+                              type="button"
+                              class="btn btn-sm"
+                              [class.btn-primary]="curso.value.icono === icono.clase"
+                              [class.btn-outline-secondary]="curso.value.icono !== icono.clase"
+                              (click)="curso.get('icono')?.setValue(icono.clase)"
+                              [title]="icono.nombre"
+                              style="width: 45px; height: 45px;"
+                            >
+                              <i class="fas fa-lg" [ngClass]="icono.clase"></i>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      <small class="text-muted">Haz clic en un icono para seleccionarlo</small>
+                    </div>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label fw-bold">Descripción</label>
+                    <textarea class="form-control" formControlName="descripcion" rows="2"
+                              placeholder="Descripción del curso..."></textarea>
+                  </div>
+
+                  <!-- Materias del curso -->
+                  <div formArrayName="materias">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                      <label class="form-label fw-bold mb-0">Materias</label>
+                      <button type="button" class="btn btn-sm btn-outline-primary" (click)="agregarMateria(i)">
+                        <i class="fas fa-plus me-1"></i>Agregar Materia
+                      </button>
+                    </div>
+
+                    <div *ngFor="let materia of getMaterias(i).controls; let j = index"
+                         class="input-group mb-2" [formGroupName]="j">
+                      <input type="text" class="form-control" formControlName="nombre" placeholder="Nombre de la materia">
+                      <select class="form-select" formControlName="estado" style="max-width: 150px;">
+                        <option [ngValue]="null">Sin badge</option>
+                        <option value="en-curso">EN CURSO</option>
+                        <option value="proximamente">PRÓXIMAMENTE</option>
+                        <option value="completado">COMPLETADO</option>
+                      </select>
+                      <button type="button" class="btn btn-outline-danger" (click)="eliminarMateria(i, j)">
+                        <i class="fas fa-times"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Información de Última Actualización -->
+            <div class="alert alert-light border" *ngIf="config">
+              <small class="text-muted">
+                <i class="fas fa-clock me-1"></i>
+                Última actualización: {{ config.ultimaActualizacion | date:'medium' }}
+                por {{ config.actualizadoPor }}
+              </small>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="d-flex justify-content-between">
+              <div>
+                <button
+                  type="button"
+                  class="btn btn-outline-info me-2"
+                  (click)="cargarValoresPorDefecto('cursos')"
+                  [disabled]="saving">
+                  <i class="fas fa-file-code me-1"></i>Cargar Valores por Defecto
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline-warning"
+                  (click)="resetearValores()"
+                  [disabled]="saving">
+                  <i class="fas fa-undo me-1"></i>Restablecer Todo
+                </button>
+              </div>
+
+              <div>
+                <button
+                  type="submit"
+                  class="btn btn-success btn-lg"
+                  [disabled]="cursosForm.invalid || saving">
+                  <span *ngIf="!saving">
+                    <i class="fas fa-save me-2"></i>Guardar Cursos
+                  </span>
+                  <span *ngIf="saving">
+                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                    Guardando...
+                  </span>
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Información Técnica Cursos -->
+      <div class="card mt-4 border-info">
+        <div class="card-header bg-info text-white">
+          <h6 class="mb-0">
+            <i class="fas fa-info-circle me-2"></i>Tips
+          </h6>
+        </div>
+        <div class="card-body">
+          <ul class="mb-0">
+            <li>Puedes agregar o eliminar cursos dinámicamente</li>
+            <li>Cada curso puede tener múltiples materias</li>
+            <li>Los estados de materia muestran badges: EN CURSO, PRÓXIMAMENTE, COMPLETADO</li>
+            <li>Los íconos son de Font Awesome (versión 6)</li>
+            <li>Puedes ocultar toda la sección con el switch "Sección Visible"</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulario Portfolio/Materias -->
+  <div class="row" *ngIf="!loading && tabActiva === 'portfolio'">
+    <div class="col-lg-10 mx-auto">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-th me-2"></i>Editar Sección Portfolio / Materias
+          </h5>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="portfolioForm" (ngSubmit)="guardarCambiosPortfolio()">
+
+            <!-- Toggle de visibilidad -->
+            <div class="form-check form-switch mb-4">
+              <input class="form-check-input" type="checkbox" id="portfolioVisible"
+                     formControlName="visible">
+              <label class="form-check-label fw-bold" for="portfolioVisible">
+                <i class="fas fa-eye me-1"></i>Sección Visible
+              </label>
+            </div>
+
+            <!-- Título y subtítulo de la sección -->
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label class="form-label fw-bold">Título de la Sección</label>
+                <input type="text" class="form-control" formControlName="titulo" placeholder="Materias">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-bold">Subtítulo</label>
+                <input type="text" class="form-control" formControlName="subtitulo" placeholder="Más detalles sobre cada materia...">
+              </div>
+            </div>
+
+            <hr class="my-4">
+
+            <!-- Materias de Portfolio -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5 class="mb-0">
+                <i class="fas fa-list me-2"></i>Materias
+                <span class="badge bg-secondary ms-2">{{ materias.length }}</span>
+              </h5>
+              <button type="button" class="btn btn-primary btn-sm" (click)="agregarMateriaPortfolio()">
+                <i class="fas fa-plus me-1"></i>Agregar Materia
+              </button>
+            </div>
+
+            <div formArrayName="materias" class="mb-4">
+              <div *ngFor="let materia of materias.controls; let i = index" class="card mb-3">
+                <div class="card-header bg-light">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">Materia {{ i + 1 }}</h6>
+                    <button type="button" class="btn btn-sm btn-danger" (click)="eliminarMateriaPortfolio(i)">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="card-body" [formGroupName]="i">
+                  <!-- Información básica -->
+                  <div class="row mb-3">
+                    <div class="col-md-6">
+                      <label class="form-label fw-bold">Título</label>
+                      <input type="text" class="form-control" formControlName="titulo" placeholder="Evangelismo Personal">
+                    </div>
+                    <div class="col-md-4">
+                      <label class="form-label fw-bold">Subtítulo</label>
+                      <input type="text" class="form-control" formControlName="subtitulo" placeholder="(Curso Básico)">
+                    </div>
+                    <div class="col-md-2">
+                      <label class="form-label fw-bold">Estado</label>
+                      <select class="form-select" formControlName="estado">
+                        <option [ngValue]="null">Sin estado</option>
+                        <option value="en-curso">En Curso</option>
+                        <option value="proximamente">Próximamente</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <!-- Imagen principal -->
+                  <div class="mb-3">
+                    <label class="form-label fw-bold">Imagen Principal</label>
+
+                    <!-- Opción 1: Pegar URL -->
+                    <div class="mb-2">
+                      <label class="form-label small">Opción 1: Pegar URL</label>
+                      <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-link"></i></span>
+                        <input type="text" class="form-control" formControlName="imagen" placeholder="https://res.cloudinary.com/...">
+                        <button type="button" class="btn btn-outline-secondary" (click)="materia.patchValue({imagen: ''})" [disabled]="!materia.get('imagen')?.value">
+                          <i class="fas fa-times"></i>
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Opción 2: Subir archivo -->
+                    <div>
+                      <label class="form-label small">Opción 2: Subir a Cloudinary</label>
+                      <div class="input-group">
+                        <input type="file" class="form-control" [id]="'imagenMateria' + i" accept="image/*" (change)="onImagenMateriaSelected($event, i)">
+                        <label class="input-group-text" [attr.for]="'imagenMateria' + i">
+                          <i class="fas fa-upload"></i>
+                        </label>
+                      </div>
+                    </div>
+
+                    <small class="text-muted d-block mt-1">Tamaño recomendado: 800x600px | Máx: 5MB</small>
+                    <div *ngIf="materia.get('imagen')?.value" class="mt-2">
+                      <img [src]="materia.get('imagen')?.value" class="img-thumbnail" style="max-width: 200px;" alt="Preview">
+                    </div>
+                  </div>
+
+                  <!-- Datos del Modal -->
+                  <div class="border rounded p-3 bg-light" formGroupName="modal">
+                    <h6 class="mb-3">
+                      <i class="fas fa-window-maximize me-2"></i>Información del Modal
+                    </h6>
+
+                    <div class="row mb-3">
+                      <div class="col-md-6">
+                        <label class="form-label fw-bold">Título del Modal</label>
+                        <input type="text" class="form-control" formControlName="tituloModal" placeholder="Evangelismo Personal">
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label fw-bold">Intro (subtítulo del modal)</label>
+                        <input type="text" class="form-control" formControlName="intro" placeholder="Compartiendo la Fe de Manera Efectiva">
+                      </div>
+                    </div>
+
+                    <div class="mb-3">
+                      <label class="form-label fw-bold">Imagen del Modal</label>
+
+                      <!-- Opción 1: Pegar URL -->
+                      <div class="mb-2">
+                        <label class="form-label small">Opción 1: Pegar URL</label>
+                        <div class="input-group">
+                          <span class="input-group-text"><i class="fas fa-link"></i></span>
+                          <input type="text" class="form-control" formControlName="imagenModal" placeholder="https://res.cloudinary.com/...">
+                          <button type="button" class="btn btn-outline-secondary" (click)="materia.get('modal')?.patchValue({imagenModal: ''})" [disabled]="!materia.get('modal')?.get('imagenModal')?.value">
+                            <i class="fas fa-times"></i>
+                          </button>
+                        </div>
+                      </div>
+
+                      <!-- Opción 2: Subir archivo -->
+                      <div>
+                        <label class="form-label small">Opción 2: Subir a Cloudinary</label>
+                        <div class="input-group">
+                          <input type="file" class="form-control" [id]="'imagenModal' + i" accept="image/*" (change)="onImagenModalMateriaSelected($event, i)">
+                          <label class="input-group-text" [attr.for]="'imagenModal' + i">
+                            <i class="fas fa-upload"></i>
+                          </label>
+                        </div>
+                      </div>
+
+                      <div *ngIf="materia.get('modal')?.get('imagenModal')?.value" class="mt-2">
+                        <img [src]="materia.get('modal')?.get('imagenModal')?.value" class="img-thumbnail" style="max-width: 200px;" alt="Preview Modal">
+                      </div>
+                    </div>
+
+                    <div class="mb-3">
+                      <label class="form-label fw-bold">Descripción (HTML permitido)</label>
+                      <textarea class="form-control" formControlName="descripcion" rows="4" placeholder="Descripción completa de la materia..."></textarea>
+                      <small class="text-muted">Puedes usar HTML básico: &lt;p&gt;, &lt;strong&gt;, &lt;em&gt;, etc.</small>
+                    </div>
+
+                    <div class="row">
+                      <div class="col-md-6">
+                        <label class="form-label fw-bold">Fecha de Inicio</label>
+                        <input type="text" class="form-control" formControlName="fechaInicio" placeholder="Domingo 02 de Febrero">
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label fw-bold">Profesor</label>
+                        <input type="text" class="form-control" formControlName="profesor" placeholder="Marco Sánchez">
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+
+            <!-- Botones de acción -->
+            <div class="d-flex justify-content-between">
+              <div>
+                <button
+                  type="button"
+                  class="btn btn-outline-info me-2"
+                  (click)="cargarValoresPorDefecto('portfolio')"
+                  [disabled]="saving">
+                  <i class="fas fa-file-code me-1"></i>Cargar Valores por Defecto
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary"
+                  (click)="portfolioForm.reset(); cargarConfiguracion()">
+                  <i class="fas fa-undo me-1"></i>Descartar Cambios
+                </button>
+              </div>
+              <button type="submit" class="btn btn-success" [disabled]="saving || portfolioForm.invalid">
+                <span *ngIf="!saving">
+                  <i class="fas fa-save me-1"></i>Guardar Cambios
+                </span>
+                <span *ngIf="saving">
+                  <i class="fas fa-spinner fa-spin me-1"></i>Guardando...
+                </span>
+              </button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+
+      <!-- Información Técnica Portfolio -->
+      <div class="card mt-4 border-info">
+        <div class="card-header bg-info text-white">
+          <h6 class="mb-0">
+            <i class="fas fa-info-circle me-2"></i>Tips
+          </h6>
+        </div>
+        <div class="card-body">
+          <ul class="mb-0">
+            <li>Cada materia tiene una imagen principal y una imagen para el modal</li>
+            <li>Las imágenes se suben a Cloudinary automáticamente</li>
+            <li>La descripción del modal soporta HTML básico</li>
+            <li>Los estados "En Curso" y "Próximamente" muestran badges en las cards</li>
+            <li>Puedes ocultar toda la sección con el switch "Sección Visible"</li>
+            <li>Recomendación: mantén 10 materias (5 Básico + 5 Avanzado)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulario About/Timeline -->
+  <div class="row" *ngIf="!loading && tabActiva === 'about'">
+    <div class="col-lg-10 mx-auto">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-timeline me-2"></i>Editar Sección About / Timeline
+          </h5>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="aboutForm" (ngSubmit)="guardarCambiosAbout()">
+
+            <!-- Switch de visibilidad -->
+            <div class="mb-4">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="aboutVisible" formControlName="visible">
+                <label class="form-check-label fw-bold" for="aboutVisible">
+                  Sección Visible
+                </label>
+              </div>
+            </div>
+
+            <!-- Título de la sección -->
+            <div class="mb-3">
+              <label class="form-label fw-bold">Título de la Sección</label>
+              <input type="text" class="form-control" formControlName="titulo" placeholder="Propósito de la Escuela Bíblica">
+            </div>
+
+            <!-- Subtítulo de la sección -->
+            <div class="mb-4">
+              <label class="form-label fw-bold">Subtítulo de la Sección</label>
+              <input type="text" class="form-control" formControlName="subtitulo" placeholder="¿Por qué existe este ministerio?">
+            </div>
+
+            <hr>
+
+            <!-- Timeline Items -->
+            <div formArrayName="items">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="mb-0"><i class="fas fa-list me-2"></i>Items del Timeline</h6>
+                <button type="button" class="btn btn-sm btn-success" (click)="agregarTimelineItem()">
+                  <i class="fas fa-plus me-1"></i>Agregar Item
+                </button>
+              </div>
+
+              <div *ngFor="let item of timelineItems.controls; let i = index" class="card mb-3" [formGroupName]="i">
+                <div class="card-header bg-light">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">Item {{ i + 1 }}</h6>
+                    <button type="button" class="btn btn-sm btn-danger" (click)="eliminarTimelineItem(i)">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <div class="row mb-3">
+                    <div class="col-md-6">
+                      <label class="form-label fw-bold">Título</label>
+                      <input type="text" class="form-control" formControlName="titulo" placeholder="MISIÓN">
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label fw-bold">Subtítulo</label>
+                      <input type="text" class="form-control" formControlName="subtitulo" placeholder="Formación Integral en la Palabra">
+                    </div>
+                  </div>
+
+                  <div class="mb-3">
+                    <label class="form-label fw-bold">Descripción</label>
+                    <textarea class="form-control" formControlName="descripcion" rows="3" placeholder="Descripción detallada..."></textarea>
+                  </div>
+
+                  <!-- Imagen -->
+                  <div class="mb-3">
+                    <label class="form-label fw-bold">Imagen (circular)</label>
+
+                    <!-- Opción 1: Pegar URL -->
+                    <div class="mb-2">
+                      <label class="form-label small">Opción 1: Pegar URL</label>
+                      <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-link"></i></span>
+                        <input type="text" class="form-control" formControlName="imagen" placeholder="https://res.cloudinary.com/...">
+                        <button type="button" class="btn btn-outline-secondary" (click)="item.patchValue({imagen: ''})" [disabled]="!item.get('imagen')?.value">
+                          <i class="fas fa-times"></i>
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Opción 2: Subir archivo -->
+                    <div>
+                      <label class="form-label small">Opción 2: Subir a Cloudinary</label>
+                      <div class="input-group">
+                        <input type="file" class="form-control" [id]="'imagenTimeline' + i" accept="image/*" (change)="onImagenTimelineSelected($event, i)">
+                        <label class="input-group-text" [attr.for]="'imagenTimeline' + i">
+                          <i class="fas fa-upload"></i>
+                        </label>
+                      </div>
+                    </div>
+
+                    <small class="text-muted d-block mt-1">Tamaño recomendado: 600x600px (cuadrada) | Máx: 5MB</small>
+                    <div *ngIf="item.get('imagen')?.value" class="mt-2">
+                      <img [src]="item.get('imagen')?.value" class="rounded-circle" style="width: 120px; height: 120px; object-fit: cover;" alt="Preview">
+                    </div>
+                  </div>
+
+                  <!-- Checkbox invertido -->
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" [id]="'invertido' + i" formControlName="invertido">
+                    <label class="form-check-label" [attr.for]="'invertido' + i">
+                      Posición invertida (derecha)
+                    </label>
+                    <small class="d-block text-muted">Alterna la posición del item en el timeline</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <hr>
+
+            <!-- Item Final -->
+            <div formGroupName="itemFinal">
+              <h6 class="mb-3"><i class="fas fa-bullseye me-2"></i>Mensaje Final del Timeline</h6>
+              <div class="row">
+                <div class="col-md-4 mb-3">
+                  <label class="form-label">Línea 1</label>
+                  <input type="text" class="form-control" formControlName="linea1" placeholder="Tu también">
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label class="form-label">Línea 2</label>
+                  <input type="text" class="form-control" formControlName="linea2" placeholder="Puedes">
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label class="form-label">Línea 3</label>
+                  <input type="text" class="form-control" formControlName="linea3" placeholder="Ser Parte">
+                </div>
+              </div>
+            </div>
+
+            <!-- Botones de acción -->
+            <div class="d-flex justify-content-between mt-4">
+              <div>
+                <button
+                  type="button"
+                  class="btn btn-outline-info me-2"
+                  (click)="cargarValoresPorDefecto('about')"
+                  [disabled]="saving">
+                  <i class="fas fa-file-code me-1"></i>Cargar Valores por Defecto
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary"
+                  (click)="aboutForm.reset(); cargarConfiguracion()">
+                  <i class="fas fa-undo me-1"></i>Descartar Cambios
+                </button>
+              </div>
+              <button type="submit" class="btn btn-success" [disabled]="saving || aboutForm.invalid">
+                <span *ngIf="!saving">
+                  <i class="fas fa-save me-1"></i>Guardar Cambios
+                </span>
+                <span *ngIf="saving">
+                  <i class="fas fa-spinner fa-spin me-1"></i>Guardando...
+                </span>
+              </button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+
+      <!-- Información Técnica About -->
+      <div class="card mt-4 border-info">
+        <div class="card-header bg-info text-white">
+          <h6 class="mb-0">
+            <i class="fas fa-info-circle me-2"></i>Tips
+          </h6>
+        </div>
+        <div class="card-body">
+          <ul class="mb-0">
+            <li>El timeline muestra la misión, visión, objetivo y compromiso de la escuela</li>
+            <li>Las imágenes deben ser cuadradas para verse bien en círculos</li>
+            <li>Alterna "Posición invertida" para crear el efecto zigzag del timeline</li>
+            <li>El mensaje final aparece al final del timeline con estilo especial</li>
+            <li>Recomendación: mantén 4 items para un diseño equilibrado</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 5: PROFESORES -->
+  <div class="row" *ngIf="!loading && tabActiva === 'profesores'">
+    <div class="col-lg-10 mx-auto">
+      <div class="card">
+        <div class="card-header bg-warning text-dark">
+          <h5 class="mb-0">
+            <i class="fas fa-chalkboard-teacher me-2"></i>Configuración de Profesores
+          </h5>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="profesoresForm" (ngSubmit)="guardarCambiosProfesores()">
+
+            <!-- Toggle Visibilidad -->
+            <div class="mb-4">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="profesoresVisible" formControlName="visible">
+                <label class="form-check-label" for="profesoresVisible">
+                  <strong>Mostrar sección de Profesores</strong>
+                </label>
+              </div>
+            </div>
+
+            <hr>
+
+            <!-- Título -->
+            <div class="mb-3">
+              <label for="profesoresTitulo" class="form-label">Título de la sección</label>
+              <input type="text" class="form-control" id="profesoresTitulo" formControlName="titulo"
+                     placeholder="Ej: PROFESORES">
+            </div>
+
+            <!-- Subtítulo -->
+            <div class="mb-3">
+              <label for="profesoresSubtitulo" class="form-label">Subtítulo</label>
+              <input type="text" class="form-control" id="profesoresSubtitulo" formControlName="subtitulo"
+                     placeholder="Ej: Equipo de maestros de la Escuela Bíblica">
+            </div>
+
+            <!-- Descripción del pie -->
+            <div class="mb-3">
+              <label for="profesoresDescripcionPie" class="form-label">Descripción del pie</label>
+              <textarea class="form-control" id="profesoresDescripcionPie" formControlName="descripcionPie" rows="3"
+                        placeholder="Texto que aparece al final de la sección..."></textarea>
+              <div class="form-text">Este texto aparece debajo de la grid de profesores</div>
+            </div>
+
+            <hr>
+
+            <!-- Toggle usar profesores reales vs hardcodeados -->
+            <div class="mb-4">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="usarProfesoresReales" formControlName="usarProfesoresReales">
+                <label class="form-check-label" for="usarProfesoresReales">
+                  <strong>Cargar profesores dinámicamente desde la base de datos de usuarios</strong>
+                </label>
+              </div>
+              <div class="form-text mt-2">
+                <i class="fas fa-info-circle me-1"></i>
+                Cuando está <strong>activado</strong>, se cargan automáticamente los usuarios con rol "profesor" o "docente" desde Firestore.<br>
+                Cuando está <strong>desactivado</strong>, se muestran los profesores predefinidos en el código.
+              </div>
+            </div>
+
+            <!-- Lista de profesores cargados desde Firestore -->
+            <div class="alert alert-info" *ngIf="profesoresForm.value.usarProfesoresReales">
+              <h6><i class="fas fa-database me-2"></i>Profesores cargados desde Firestore:</h6>
+
+              <div *ngIf="loadingProfesores" class="text-center py-3">
+                <div class="spinner-border spinner-border-sm" role="status">
+                  <span class="visually-hidden">Cargando profesores...</span>
+                </div>
+                <span class="ms-2">Cargando profesores...</span>
+              </div>
+
+              <div *ngIf="!loadingProfesores && profesoresReales.length === 0" class="text-muted">
+                <i class="fas fa-exclamation-triangle me-1"></i>
+                No hay usuarios con rol "profesor" o "docente" en la base de datos.
+                <br>
+                <small>Los profesores predefinidos se mostrarán como fallback.</small>
+              </div>
+
+              <ul class="list-group mt-3" *ngIf="!loadingProfesores && profesoresReales.length > 0">
+                <li class="list-group-item d-flex align-items-center" *ngFor="let profesor of profesoresReales">
+                  <img [src]="profesor.foto" [alt]="profesor.nombre"
+                       class="rounded-circle me-3"
+                       style="width: 50px; height: 50px; object-fit: cover;">
+                  <div class="flex-grow-1">
+                    <strong>{{ profesor.nombre }}</strong>
+                    <br>
+                    <small class="text-muted">{{ profesor.descripcion }}</small>
+                  </div>
+                </li>
+              </ul>
+
+              <div class="mt-3">
+                <button type="button" class="btn btn-sm btn-outline-primary" (click)="cargarProfesores()">
+                  <i class="fas fa-sync-alt me-1"></i>Recargar profesores
+                </button>
+              </div>
+            </div>
+
+            <!-- Mensaje cuando no se usan profesores reales -->
+            <div class="alert alert-secondary" *ngIf="!profesoresForm.value.usarProfesoresReales">
+              <i class="fas fa-code me-2"></i>
+              Se están mostrando los <strong>profesores predefinidos</strong> en el código.<br>
+              <small>Activa el toggle de arriba para cargar profesores dinámicamente desde la base de datos.</small>
+            </div>
+
+            <hr>
+
+            <!-- Botones de acción -->
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-success" [disabled]="saving || profesoresForm.invalid">
+                <i class="fas fa-save me-2" *ngIf="!saving"></i>
+                <span class="spinner-border spinner-border-sm me-2" *ngIf="saving"></span>
+                {{ saving ? 'Guardando...' : 'Guardar Cambios' }}
+              </button>
+              <button type="button" class="btn btn-warning" (click)="cargarValoresPorDefecto('profesores')" [disabled]="saving">
+                <i class="fas fa-undo me-2"></i>Cargar Valores por Defecto
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Información Técnica Profesores -->
+      <div class="card mt-4 border-info">
+        <div class="card-header bg-info text-white">
+          <h6 class="mb-0">
+            <i class="fas fa-info-circle me-2"></i>Tips
+          </h6>
+        </div>
+        <div class="card-body">
+          <ul class="mb-0">
+            <li>Los profesores se cargan automáticamente desde la colección <code>users</code> con rol <code>profesor</code> o <code>docente</code></li>
+            <li>Para agregar o editar profesores, hazlo desde el panel de "Gestión de Usuarios"</li>
+            <li>Asegúrate de que los usuarios tengan una foto de perfil configurada en Cloudinary</li>
+            <li>Si no hay profesores en la BD, se mostrarán automáticamente los profesores predefinidos</li>
+            <li>Los profesores predefinidos son: Eben Ezer, Cristian, Marco, Eliezer, Hernán, Efrain, Kevin, Freddy, y uno más</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 6: INSCRIPCIÓN -->
+  <div class="row" *ngIf="!loading && tabActiva === 'inscripcion'">
+    <div class="col-12">
+      <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-user-plus me-2"></i>Configuración de Inscripción
+          </h5>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="inscripcionForm">
+            <!-- Visibilidad -->
+            <div class="row mb-3">
+              <div class="col-12">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="inscripcionVisible" formControlName="visible">
+                  <label class="form-check-label" for="inscripcionVisible">
+                    <strong>Mostrar sección en Home</strong>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Título -->
+            <div class="row mb-3">
+              <div class="col-12">
+                <label for="inscripcionTitulo" class="form-label">Título Principal *</label>
+                <input type="text" class="form-control" id="inscripcionTitulo" formControlName="titulo" placeholder="¿Listo para empezar?">
+              </div>
+            </div>
+
+            <!-- Botón CTA -->
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="inscripcionBotonTexto" class="form-label">Texto del Botón *</label>
+                <input type="text" class="form-control" id="inscripcionBotonTexto" formControlName="botonTexto" placeholder="Inscribirme Ahora">
+              </div>
+              <div class="col-md-6">
+                <label for="inscripcionBotonLink" class="form-label">Enlace del Botón *</label>
+                <input type="text" class="form-control" id="inscripcionBotonLink" formControlName="botonLink" placeholder="/login">
+                <small class="form-text text-muted">Rutas internas: /login, /registro</small>
+              </div>
+            </div>
+
+            <!-- Video de YouTube -->
+            <div class="row mb-3">
+              <div class="col-12">
+                <label for="inscripcionVideoTitulo" class="form-label">Título del Video (opcional)</label>
+                <input type="text" class="form-control" id="inscripcionVideoTitulo" formControlName="videoTitulo" placeholder="Tutorial: Cómo crear cuenta y solicitar inscripción">
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-12">
+                <label for="inscripcionVideoYoutube" class="form-label">URL del Video de YouTube (opcional)</label>
+                <input type="text" class="form-control" id="inscripcionVideoYoutube" formControlName="videoYoutube" placeholder="https://www.youtube.com/watch?v=xxxxx">
+                <small class="form-text text-muted">Acepta: URL completa, enlace corto (youtu.be), o solo el ID del video</small>
+              </div>
+            </div>
+
+            <!-- Botones de acción -->
+            <div class="row mt-4">
+              <div class="col-12">
+                <button type="button" class="btn btn-primary me-2" (click)="guardarCambiosInscripcion()" [disabled]="saving || inscripcionForm.invalid">
+                  <i class="fas fa-save me-2"></i>
+                  {{ saving ? 'Guardando...' : 'Guardar Cambios' }}
+                </button>
+                <button type="button" class="btn btn-outline-secondary" (click)="cargarValoresPorDefecto('inscripcion')" [disabled]="saving">
+                  <i class="fas fa-undo me-2"></i>Cargar Valores por Defecto
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab 7: Footer -->
+  <div class="row" *ngIf="!loading && tabActiva === 'footer'">
+    <div class="col-12">
+      <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-info-circle me-2"></i>Configuración del Footer
+          </h5>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="footerForm">
+            <!-- Visibilidad -->
+            <div class="row mb-3">
+              <div class="col-12">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="footerVisible" formControlName="visible">
+                  <label class="form-check-label" for="footerVisible">
+                    <strong>Mostrar Footer</strong>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Copyright -->
+            <div class="row mb-3">
+              <div class="col-md-8">
+                <label for="footerCopyright" class="form-label">Texto de Copyright *</label>
+                <input type="text" class="form-control" id="footerCopyright" formControlName="textoCopyright" placeholder="Escuela Biblica CAVEVID">
+              </div>
+              <div class="col-md-4">
+                <label for="footerAnio" class="form-label">Año *</label>
+                <input type="number" class="form-control" id="footerAnio" formControlName="anioCopyright" min="2000" max="2100">
+              </div>
+            </div>
+
+            <!-- Redes Sociales -->
+            <div class="row mb-3">
+              <div class="col-12">
+                <h6 class="border-bottom pb-2 mb-3">Redes Sociales</h6>
+              </div>
+            </div>
+
+            <div formGroupName="redesSociales">
+              <!-- Facebook -->
+              <div formGroupName="facebook" class="row mb-3">
+                <div class="col-md-1 d-flex align-items-center">
+                  <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="facebookVisible" formControlName="visible">
+                  </div>
+                </div>
+                <div class="col-md-2 d-flex align-items-center">
+                  <label class="form-label mb-0">
+                    <i class="fab fa-facebook me-2"></i>Facebook
+                  </label>
+                </div>
+                <div class="col-md-9">
+                  <input type="url" class="form-control" formControlName="url" placeholder="https://facebook.com/tu-pagina">
+                </div>
+              </div>
+
+              <!-- Instagram -->
+              <div formGroupName="instagram" class="row mb-3">
+                <div class="col-md-1 d-flex align-items-center">
+                  <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="instagramVisible" formControlName="visible">
+                  </div>
+                </div>
+                <div class="col-md-2 d-flex align-items-center">
+                  <label class="form-label mb-0">
+                    <i class="fab fa-instagram me-2"></i>Instagram
+                  </label>
+                </div>
+                <div class="col-md-9">
+                  <input type="url" class="form-control" formControlName="url" placeholder="https://instagram.com/tu-perfil">
+                </div>
+              </div>
+
+              <!-- Twitter -->
+              <div formGroupName="twitter" class="row mb-3">
+                <div class="col-md-1 d-flex align-items-center">
+                  <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="twitterVisible" formControlName="visible">
+                  </div>
+                </div>
+                <div class="col-md-2 d-flex align-items-center">
+                  <label class="form-label mb-0">
+                    <i class="fab fa-twitter me-2"></i>Twitter
+                  </label>
+                </div>
+                <div class="col-md-9">
+                  <input type="url" class="form-control" formControlName="url" placeholder="https://twitter.com/tu-usuario">
+                </div>
+              </div>
+
+              <!-- YouTube -->
+              <div formGroupName="youtube" class="row mb-3">
+                <div class="col-md-1 d-flex align-items-center">
+                  <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="youtubeVisible" formControlName="visible">
+                  </div>
+                </div>
+                <div class="col-md-2 d-flex align-items-center">
+                  <label class="form-label mb-0">
+                    <i class="fab fa-youtube me-2"></i>YouTube
+                  </label>
+                </div>
+                <div class="col-md-9">
+                  <input type="url" class="form-control" formControlName="url" placeholder="https://youtube.com/@tu-canal">
+                </div>
+              </div>
+
+              <!-- LinkedIn -->
+              <div formGroupName="linkedin" class="row mb-3">
+                <div class="col-md-1 d-flex align-items-center">
+                  <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="linkedinVisible" formControlName="visible">
+                  </div>
+                </div>
+                <div class="col-md-2 d-flex align-items-center">
+                  <label class="form-label mb-0">
+                    <i class="fab fa-linkedin me-2"></i>LinkedIn
+                  </label>
+                </div>
+                <div class="col-md-9">
+                  <input type="url" class="form-control" formControlName="url" placeholder="https://linkedin.com/company/tu-empresa">
+                </div>
+              </div>
+            </div>
+
+            <!-- WhatsApp -->
+            <div class="row mb-3">
+              <div class="col-12">
+                <h6 class="border-bottom pb-2 mb-3">Contacto WhatsApp</h6>
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-12">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="whatsappVisible" formControlName="whatsappVisible">
+                  <label class="form-check-label" for="whatsappVisible">
+                    <strong>Mostrar contacto de WhatsApp</strong>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="whatsappTexto" class="form-label">Texto de contacto *</label>
+                <input type="text" class="form-control" id="whatsappTexto" formControlName="whatsappTexto" placeholder="Contacto WhatsApp:">
+              </div>
+              <div class="col-md-6">
+                <label for="whatsappNumero" class="form-label">Número de WhatsApp *</label>
+                <input type="text" class="form-control" id="whatsappNumero" formControlName="whatsappNumero" placeholder="+591 63332108">
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-12">
+                <label for="whatsappMensaje" class="form-label">Mensaje predeterminado (opcional)</label>
+                <textarea class="form-control" id="whatsappMensaje" formControlName="whatsappMensaje" rows="2" placeholder="Hola, quiero participar del curso de la Escuela Biblica!"></textarea>
+                <small class="form-text text-muted">Este mensaje se enviará automáticamente al hacer clic en el enlace de WhatsApp</small>
+              </div>
+            </div>
+
+            <!-- Botones de acción -->
+            <div class="row mt-4">
+              <div class="col-12">
+                <button type="button" class="btn btn-primary me-2" (click)="guardarCambiosFooter()" [disabled]="saving || footerForm.invalid">
+                  <i class="fas fa-save me-2"></i>
+                  {{ saving ? 'Guardando...' : 'Guardar Cambios' }}
+                </button>
+                <button type="button" class="btn btn-outline-secondary" (click)="cargarValoresPorDefecto('footer')" [disabled]="saving">
+                  <i class="fas fa-undo me-2"></i>Cargar Valores por Defecto
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
