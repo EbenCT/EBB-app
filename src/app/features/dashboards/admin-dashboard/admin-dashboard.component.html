@@ -103,45 +103,5 @@
         </div>
       </div>
     </div>
-
-    <!-- Sección de Calificaciones -->
-    <div class="row mb-4 mt-5">
-      <div class="col-12">
-        <h3 class="mb-3">Calificaciones</h3>
-      </div>
-    </div>
-
-    <div class="row g-3" *ngIf="!loading">
-      <div class="col-md-12" *ngFor="let curso of cursosConCalificaciones">
-        <div class="card curso-card shadow-sm">
-          <div class="card-body">
-            <div class="row align-items-center">
-              <div class="col-md-8">
-                <h5 class="mb-2">
-                  <i class="fas fa-graduation-cap text-primary me-2"></i>
-                  {{ curso.titulo }}
-                </h5>
-                <p class="text-muted mb-0 small">{{ curso.descripcion }}</p>
-              </div>
-              <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                <button class="btn btn-outline-primary btn-sm me-2" (click)="verLibroCalificaciones(curso.id)">
-                  <i class="fas fa-book"></i> Libro de Calificaciones
-                </button>
-                <button class="btn btn-outline-secondary btn-sm" (click)="configurarCalificaciones(curso.id)">
-                  <i class="fas fa-cog"></i> Configurar
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-12" *ngIf="cursosConCalificaciones.length === 0">
-        <div class="alert alert-info text-center">
-          <i class="fas fa-info-circle me-2"></i>
-          No hay cursos disponibles. Crea cursos primero para gestionar calificaciones.
-        </div>
-      </div>
-    </div>
   </div>
 </div>

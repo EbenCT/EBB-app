@@ -95,7 +95,9 @@
                         </div>
                         <div>
                           <strong>{{ curso.titulo }}</strong>
-                          <p class="text-muted small mb-0">{{ curso.descripcion }}</p>
+                          <p class="text-muted small mb-0" [title]="curso.descripcion">
+                            {{ truncateText(curso.descripcion, 80) }}
+                          </p>
                         </div>
                       </div>
                     </td>
@@ -124,6 +126,18 @@
                           (click)="openEnrollModal(curso)"
                           title="Inscribir estudiantes">
                           <i class="fas fa-user-plus"></i>
+                        </button>
+                        <button
+                          class="btn btn-sm btn-outline-primary"
+                          (click)="verLibroCalificaciones(curso.id)"
+                          title="Libro de Calificaciones">
+                          <i class="fas fa-book"></i>
+                        </button>
+                        <button
+                          class="btn btn-sm btn-outline-secondary"
+                          (click)="configurarCalificaciones(curso.id)"
+                          title="Configurar Calificaciones">
+                          <i class="fas fa-cog"></i>
                         </button>
                         <button
                           class="btn btn-sm btn-outline-primary"

@@ -340,6 +340,21 @@ export class CursosComponent implements OnInit {
     this.router.navigate(['/cursos', cursoId, 'secciones']);
   }
 
+  verLibroCalificaciones(cursoId: string) {
+    this.router.navigate(['/cursos', cursoId, 'calificaciones']);
+  }
+
+  configurarCalificaciones(cursoId: string) {
+    this.router.navigate(['/cursos', cursoId, 'configurar-calificaciones']);
+  }
+
+  truncateText(text: string, maxLength: number = 80): string {
+    if (!text) return '';
+    return text.length > maxLength
+      ? text.substring(0, maxLength) + '...'
+      : text;
+  }
+
   logout() {
     this.authService.logout();
     this.router.navigate(['/']);

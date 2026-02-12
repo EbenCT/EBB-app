@@ -22,7 +22,6 @@ export class AdminDashboardComponent implements OnInit {
     totalProfesores: 0
   };
   loading = true;
-  cursosConCalificaciones: any[] = [];
 
   constructor(
     private authService: AuthService,
@@ -50,9 +49,6 @@ export class AdminDashboardComponent implements OnInit {
       // Obtener estadísticas de cursos
       const courseStats = await this.courseService.getCourseStats();
 
-      // Obtener cursos para calificaciones
-      this.cursosConCalificaciones = await firstValueFrom(this.courseService.getAllCourses());
-
       // Actualizar estadísticas
       this.stats = {
         totalUsuarios: userStats.total,
@@ -70,14 +66,6 @@ export class AdminDashboardComponent implements OnInit {
 
   navegarA(ruta: string) {
     this.router.navigate([ruta]);
-  }
-
-  verLibroCalificaciones(cursoId: string) {
-    this.router.navigate(['/cursos', cursoId, 'calificaciones']);
-  }
-
-  configurarCalificaciones(cursoId: string) {
-    this.router.navigate(['/cursos', cursoId, 'configurar-calificaciones']);
   }
 
   logout() {
