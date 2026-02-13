@@ -436,10 +436,10 @@ export class ConfigurarHomeComponent implements OnInit {
 
   crearCursoForm(curso?: any): FormGroup {
     const cursoGroup = this.fb.group({
-      titulo: [curso?.titulo || '', Validators.required],
-      subtitulo: [curso?.subtitulo || '', Validators.required],
-      icono: [curso?.icono || 'fa-book', Validators.required],
-      descripcion: [curso?.descripcion || '', Validators.required],
+      titulo: [curso?.titulo || '', Validators.required], // ⚠️ REQUERIDO
+      subtitulo: [curso?.subtitulo || ''], // Opcional
+      icono: [curso?.icono || 'fa-book', Validators.required], // ⚠️ REQUERIDO
+      descripcion: [curso?.descripcion || ''], // Opcional
       materias: this.fb.array([])
     });
 
@@ -456,8 +456,8 @@ export class ConfigurarHomeComponent implements OnInit {
 
   crearMateriaForm(materia?: any): FormGroup {
     return this.fb.group({
-      nombre: [materia?.nombre || '', Validators.required],
-      estado: [materia?.estado || null]
+      nombre: [materia?.nombre || '', Validators.required], // ⚠️ REQUERIDO
+      estado: [materia?.estado || null] // Opcional
     });
   }
 
@@ -477,17 +477,17 @@ export class ConfigurarHomeComponent implements OnInit {
 
   crearMateriaPortfolioForm(materia?: any): FormGroup {
     return this.fb.group({
-      titulo: [materia?.titulo || '', Validators.required],
-      subtitulo: [materia?.subtitulo || '', Validators.required],
-      imagen: [materia?.imagen || '', Validators.required],
+      titulo: [materia?.titulo || '', Validators.required], // ⚠️ REQUERIDO
+      subtitulo: [materia?.subtitulo || ''], // Opcional
+      imagen: [materia?.imagen || ''], // Opcional
       estado: [materia?.estado || null],
       modal: this.fb.group({
-        tituloModal: [materia?.modal?.tituloModal || '', Validators.required],
-        intro: [materia?.modal?.intro || '', Validators.required],
-        imagenModal: [materia?.modal?.imagenModal || '', Validators.required],
-        descripcion: [materia?.modal?.descripcion || '', Validators.required],
-        fechaInicio: [materia?.modal?.fechaInicio || '', Validators.required],
-        profesor: [materia?.modal?.profesor || '', Validators.required]
+        tituloModal: [materia?.modal?.tituloModal || ''], // Opcional (usa título principal si está vacío)
+        intro: [materia?.modal?.intro || ''], // Opcional
+        imagenModal: [materia?.modal?.imagenModal || ''], // Opcional (usa imagen principal si está vacía)
+        descripcion: [materia?.modal?.descripcion || ''], // Opcional
+        fechaInicio: [materia?.modal?.fechaInicio || ''], // Opcional
+        profesor: [materia?.modal?.profesor || ''] // Opcional
       })
     });
   }
@@ -523,10 +523,10 @@ export class ConfigurarHomeComponent implements OnInit {
 
   crearTimelineItemForm(item?: any): FormGroup {
     return this.fb.group({
-      titulo: [item?.titulo || '', Validators.required],
-      subtitulo: [item?.subtitulo || '', Validators.required],
-      descripcion: [item?.descripcion || '', Validators.required],
-      imagen: [item?.imagen || '', Validators.required],
+      titulo: [item?.titulo || '', Validators.required], // ⚠️ REQUERIDO
+      subtitulo: [item?.subtitulo || ''], // Opcional
+      descripcion: [item?.descripcion || ''], // Opcional
+      imagen: [item?.imagen || ''], // Opcional
       invertido: [item?.invertido || false]
     });
   }
@@ -638,7 +638,10 @@ export class ConfigurarHomeComponent implements OnInit {
 
   async guardarCambiosCursos() {
     if (this.cursosForm.invalid) {
-      this.mostrarMensaje('error', 'Por favor completa todos los campos requeridos en los cursos');
+      // Marcar todos los campos como touched para mostrar errores
+      this.markFormGroupTouched(this.cursosForm);
+
+      this.mostrarMensaje('error', '❌ Por favor completa los campos requeridos marcados en rojo');
       return;
     }
 
@@ -668,7 +671,10 @@ export class ConfigurarHomeComponent implements OnInit {
 
   async guardarCambiosPortfolio() {
     if (this.portfolioForm.invalid) {
-      this.mostrarMensaje('error', 'Por favor completa todos los campos requeridos en Portfolio/Materias');
+      // Marcar todos los campos como touched para mostrar errores
+      this.markFormGroupTouched(this.portfolioForm);
+
+      this.mostrarMensaje('error', '❌ Por favor completa los campos requeridos marcados en rojo');
       return;
     }
 
@@ -698,7 +704,10 @@ export class ConfigurarHomeComponent implements OnInit {
 
   async guardarCambiosAbout() {
     if (this.aboutForm.invalid) {
-      this.mostrarMensaje('error', 'Por favor completa todos los campos requeridos en About/Timeline');
+      // Marcar todos los campos como touched para mostrar errores
+      this.markFormGroupTouched(this.aboutForm);
+
+      this.mostrarMensaje('error', '❌ Por favor completa los campos requeridos marcados en rojo');
       return;
     }
 
@@ -1072,5 +1081,22 @@ export class ConfigurarHomeComponent implements OnInit {
 
   volverAdmin() {
     this.router.navigate(['/admin']);
+  }
+
+  // ===== MÉTODOS AUXILIARES DE VALIDACIÓN =====
+
+  /**
+   * Marca todos los campos de un FormGroup/FormArray como touched
+   * para mostrar mensajes de validación
+   */
+  markFormGroupTouched(formGroup: FormGroup | FormArray) {
+    Object.keys(formGroup.controls).forEach(key => {
+      const control = formGroup.get(key);
+      control?.markAsTouched();
+
+      if (control instanceof FormGroup || control instanceof FormArray) {
+        this.markFormGroupTouched(control);
+      }
+    });
   }
 }

@@ -435,16 +435,30 @@
                 <div class="card-body" [formGroupName]="i">
                   <div class="row">
                     <div class="col-md-4 mb-3">
-                      <label class="form-label fw-bold">Título</label>
-                      <input type="text" class="form-control" formControlName="titulo" placeholder="Básico">
+                      <label class="form-label fw-bold">
+                        <i class="fas fa-exclamation-circle text-danger me-1"></i>
+                        Título <span class="badge bg-danger">Requerido</span>
+                      </label>
+                      <input
+                        type="text"
+                        class="form-control"
+                        formControlName="titulo"
+                        placeholder="Básico"
+                        [class.is-invalid]="curso.get('titulo')?.invalid && curso.get('titulo')?.touched">
+                      <div class="invalid-feedback" *ngIf="curso.get('titulo')?.invalid && curso.get('titulo')?.touched">
+                        El título es requerido
+                      </div>
                     </div>
                     <div class="col-md-4 mb-3">
-                      <label class="form-label fw-bold">Subtítulo</label>
+                      <label class="form-label fw-bold">
+                        Subtítulo <small class="text-muted">(Opcional)</small>
+                      </label>
                       <input type="text" class="form-control" formControlName="subtitulo" placeholder="Estudio Bíblico Fundamental">
                     </div>
                     <div class="col-md-12 mb-3">
                       <label class="form-label fw-bold">
-                        Icono
+                        <i class="fas fa-exclamation-circle text-danger me-1"></i>
+                        Icono <span class="badge bg-danger">Requerido</span>
                         <span class="badge bg-primary ms-2">
                           <i class="fas" [ngClass]="curso.value.icono || 'fa-question'"></i>
                           {{ curso.value.icono ? 'Seleccionado' : 'Ninguno' }}
@@ -471,7 +485,9 @@
                     </div>
                   </div>
                   <div class="mb-3">
-                    <label class="form-label fw-bold">Descripción</label>
+                    <label class="form-label fw-bold">
+                      Descripción <small class="text-muted">(Opcional)</small>
+                    </label>
                     <textarea class="form-control" formControlName="descripcion" rows="2"
                               placeholder="Descripción del curso..."></textarea>
                   </div>
@@ -479,7 +495,9 @@
                   <!-- Materias del curso -->
                   <div formArrayName="materias">
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                      <label class="form-label fw-bold mb-0">Materias</label>
+                      <label class="form-label fw-bold mb-0">
+                        Materias <small class="text-muted">(Opcional - pero nombre es requerido si agregas una)</small>
+                      </label>
                       <button type="button" class="btn btn-sm btn-outline-primary" (click)="agregarMateria(i)">
                         <i class="fas fa-plus me-1"></i>Agregar Materia
                       </button>
@@ -487,7 +505,12 @@
 
                     <div *ngFor="let materia of getMaterias(i).controls; let j = index"
                          class="input-group mb-2" [formGroupName]="j">
-                      <input type="text" class="form-control" formControlName="nombre" placeholder="Nombre de la materia">
+                      <input
+                        type="text"
+                        class="form-control"
+                        formControlName="nombre"
+                        placeholder="Nombre de la materia (⚠️ requerido)"
+                        [class.is-invalid]="materia.get('nombre')?.invalid && materia.get('nombre')?.touched">
                       <select class="form-select" formControlName="estado" style="max-width: 150px;">
                         <option [ngValue]="null">Sin badge</option>
                         <option value="en-curso">EN CURSO</option>
@@ -497,6 +520,9 @@
                       <button type="button" class="btn btn-outline-danger" (click)="eliminarMateria(i, j)">
                         <i class="fas fa-times"></i>
                       </button>
+                      <div class="invalid-feedback" *ngIf="materia.get('nombre')?.invalid && materia.get('nombre')?.touched">
+                        Requerido
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -630,12 +656,24 @@
                   <!-- Información básica -->
                   <div class="row mb-3">
                     <div class="col-md-6">
-                      <label class="form-label fw-bold">Título</label>
-                      <input type="text" class="form-control" formControlName="titulo" placeholder="Evangelismo Personal">
+                      <label class="form-label fw-bold">
+                        <i class="fas fa-exclamation-circle text-danger me-1"></i>
+                        Título <span class="badge bg-danger">Requerido</span>
+                      </label>
+                      <input
+                        type="text"
+                        class="form-control"
+                        formControlName="titulo"
+                        placeholder="Evangelismo Personal"
+                        [class.is-invalid]="materia.get('titulo')?.invalid && materia.get('titulo')?.touched">
+                      <div class="invalid-feedback" *ngIf="materia.get('titulo')?.invalid && materia.get('titulo')?.touched">
+                        El título es requerido
+                      </div>
                     </div>
                     <div class="col-md-4">
                       <label class="form-label fw-bold">Subtítulo</label>
                       <input type="text" class="form-control" formControlName="subtitulo" placeholder="(Curso Básico)">
+                      <small class="text-muted">Opcional</small>
                     </div>
                     <div class="col-md-2">
                       <label class="form-label fw-bold">Estado</label>
@@ -649,7 +687,9 @@
 
                   <!-- Imagen principal -->
                   <div class="mb-3">
-                    <label class="form-label fw-bold">Imagen Principal</label>
+                    <label class="form-label fw-bold">
+                      Imagen Principal <small class="text-muted">(Opcional)</small>
+                    </label>
 
                     <!-- Opción 1: Pegar URL -->
                     <div class="mb-2">
@@ -688,17 +728,23 @@
 
                     <div class="row mb-3">
                       <div class="col-md-6">
-                        <label class="form-label fw-bold">Título del Modal</label>
+                        <label class="form-label fw-bold">
+                          Título del Modal <small class="text-muted">(Opcional - usa título principal si está vacío)</small>
+                        </label>
                         <input type="text" class="form-control" formControlName="tituloModal" placeholder="Evangelismo Personal">
                       </div>
                       <div class="col-md-6">
-                        <label class="form-label fw-bold">Intro (subtítulo del modal)</label>
+                        <label class="form-label fw-bold">
+                          Intro (subtítulo del modal) <small class="text-muted">(Opcional)</small>
+                        </label>
                         <input type="text" class="form-control" formControlName="intro" placeholder="Compartiendo la Fe de Manera Efectiva">
                       </div>
                     </div>
 
                     <div class="mb-3">
-                      <label class="form-label fw-bold">Imagen del Modal</label>
+                      <label class="form-label fw-bold">
+                        Imagen del Modal <small class="text-muted">(Opcional - usa imagen principal si está vacía)</small>
+                      </label>
 
                       <!-- Opción 1: Pegar URL -->
                       <div class="mb-2">
@@ -729,18 +775,24 @@
                     </div>
 
                     <div class="mb-3">
-                      <label class="form-label fw-bold">Descripción (HTML permitido)</label>
+                      <label class="form-label fw-bold">
+                        Descripción (HTML permitido) <small class="text-muted">(Opcional)</small>
+                      </label>
                       <textarea class="form-control" formControlName="descripcion" rows="4" placeholder="Descripción completa de la materia..."></textarea>
                       <small class="text-muted">Puedes usar HTML básico: &lt;p&gt;, &lt;strong&gt;, &lt;em&gt;, etc.</small>
                     </div>
 
                     <div class="row">
                       <div class="col-md-6">
-                        <label class="form-label fw-bold">Fecha de Inicio</label>
+                        <label class="form-label fw-bold">
+                          Fecha de Inicio <small class="text-muted">(Opcional)</small>
+                        </label>
                         <input type="text" class="form-control" formControlName="fechaInicio" placeholder="Domingo 02 de Febrero">
                       </div>
                       <div class="col-md-6">
-                        <label class="form-label fw-bold">Profesor</label>
+                        <label class="form-label fw-bold">
+                          Profesor <small class="text-muted">(Opcional)</small>
+                        </label>
                         <input type="text" class="form-control" formControlName="profesor" placeholder="Marco Sánchez">
                       </div>
                     </div>
@@ -859,23 +911,40 @@
                 <div class="card-body">
                   <div class="row mb-3">
                     <div class="col-md-6">
-                      <label class="form-label fw-bold">Título</label>
-                      <input type="text" class="form-control" formControlName="titulo" placeholder="MISIÓN">
+                      <label class="form-label fw-bold">
+                        <i class="fas fa-exclamation-circle text-danger me-1"></i>
+                        Título <span class="badge bg-danger">Requerido</span>
+                      </label>
+                      <input
+                        type="text"
+                        class="form-control"
+                        formControlName="titulo"
+                        placeholder="MISIÓN"
+                        [class.is-invalid]="item.get('titulo')?.invalid && item.get('titulo')?.touched">
+                      <div class="invalid-feedback" *ngIf="item.get('titulo')?.invalid && item.get('titulo')?.touched">
+                        El título es requerido
+                      </div>
                     </div>
                     <div class="col-md-6">
-                      <label class="form-label fw-bold">Subtítulo</label>
+                      <label class="form-label fw-bold">
+                        Subtítulo <small class="text-muted">(Opcional)</small>
+                      </label>
                       <input type="text" class="form-control" formControlName="subtitulo" placeholder="Formación Integral en la Palabra">
                     </div>
                   </div>
 
                   <div class="mb-3">
-                    <label class="form-label fw-bold">Descripción</label>
+                    <label class="form-label fw-bold">
+                      Descripción <small class="text-muted">(Opcional)</small>
+                    </label>
                     <textarea class="form-control" formControlName="descripcion" rows="3" placeholder="Descripción detallada..."></textarea>
                   </div>
 
                   <!-- Imagen -->
                   <div class="mb-3">
-                    <label class="form-label fw-bold">Imagen (circular)</label>
+                    <label class="form-label fw-bold">
+                      Imagen (circular) <small class="text-muted">(Opcional)</small>
+                    </label>
 
                     <!-- Opción 1: Pegar URL -->
                     <div class="mb-2">
