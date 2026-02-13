@@ -9,11 +9,21 @@
                 </button>
                 <div class="collapse navbar-collapse" id="navbarResponsive">
                     <ul class="navbar-nav text-uppercase ms-auto py-4 py-lg-0">
-                        <li class="nav-item"><a class="nav-link" href="#services">Cursos</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#portfolio">Materias</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#about">Propósito</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#team">Profesores</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#contact">Inscripción</a></li>
+                        <li class="nav-item" *ngIf="(config?.seccionCursos?.visible) ?? true">
+                            <a class="nav-link" href="#services">Cursos</a>
+                        </li>
+                        <li class="nav-item" *ngIf="(config?.seccionPortfolio?.visible) ?? true">
+                            <a class="nav-link" href="#portfolio">Materias</a>
+                        </li>
+                        <li class="nav-item" *ngIf="(config?.seccionAbout?.visible) ?? true">
+                            <a class="nav-link" href="#about">Propósito</a>
+                        </li>
+                        <li class="nav-item" *ngIf="config?.seccionProfesores?.visible !== false">
+                            <a class="nav-link" href="#team">Profesores</a>
+                        </li>
+                        <li class="nav-item" *ngIf="config?.seccionInscripcion?.visible !== false">
+                            <a class="nav-link" href="#contact">Inscripción</a>
+                        </li>
                         <li class="nav-item" *ngIf="!isLoggedIn">
                             <a class="nav-link btn btn-outline-primary text-white px-3 ms-lg-3" routerLink="/login">
                                 <i class="fas fa-sign-in-alt me-1"></i>Iniciar Sesión
