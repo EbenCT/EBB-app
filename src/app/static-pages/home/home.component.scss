@@ -1,0 +1,103 @@
+// ===== ESTILOS PARA MODAL DE MATERIAS =====
+
+// Imagen del modal - tamaño controlado
+.materia-modal-image {
+  max-width: 100%;
+  height: auto;
+  object-fit: cover;
+
+  // En desktop, limitar altura máxima para evitar imágenes demasiado grandes
+  @media (min-width: 992px) {
+    max-height: 400px;
+    width: 100%;
+  }
+
+  // En tablet/móvil, centrar y limitar tamaño
+  @media (max-width: 991px) {
+    max-width: 350px;
+    margin: 0 auto;
+    display: block;
+  }
+}
+
+// Título del modal - responsivo para evitar overflow en móvil
+.modal-title-responsive {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+
+  // En móvil, reducir tamaño de fuente si es necesario
+  @media (max-width: 576px) {
+    font-size: 1.5rem !important;
+    line-height: 1.3;
+    padding: 0 10px;
+  }
+
+  @media (min-width: 577px) and (max-width: 768px) {
+    font-size: 1.75rem !important;
+  }
+}
+
+// Detalles de la materia (fecha, profesor, estado)
+.materia-details {
+  background-color: #f8f9fa;
+  padding: 1.25rem;
+  border-radius: 0.5rem;
+  border-left: 4px solid #ffc800;
+
+  .detail-item {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+
+    i {
+      flex-shrink: 0;
+    }
+
+    strong {
+      flex-shrink: 0;
+    }
+
+    // Asegurar que los badges no se rompan
+    .en-curso,
+    .proximamente {
+      flex-shrink: 0;
+    }
+  }
+}
+
+// Ajustar modal dialog para mejor visualización
+.portfolio-modal {
+  .modal-dialog {
+    max-width: 95%;
+    margin: 1.75rem auto;
+
+    @media (min-width: 768px) {
+      max-width: 90%;
+    }
+
+    @media (min-width: 992px) {
+      max-width: 1140px; // modal-xl size
+    }
+  }
+
+  // Asegurar que el contenido del modal no cause scroll innecesario
+  .modal-body {
+    padding: 2rem 1rem;
+
+    @media (min-width: 768px) {
+      padding: 3rem 2rem;
+    }
+  }
+}
+
+// Mejoras adicionales para la intro
+.item-intro {
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+
+  @media (max-width: 576px) {
+    font-size: 1rem;
+    padding: 0 10px;
+  }
+}
