@@ -5,6 +5,8 @@
   max-width: 100%;
   height: auto;
   object-fit: cover;
+  display: block;
+  margin: 0 auto;
 
   // En desktop, limitar altura máxima para evitar imágenes demasiado grandes
   @media (min-width: 992px) {
@@ -12,11 +14,15 @@
     width: 100%;
   }
 
-  // En tablet/móvil, centrar y limitar tamaño
-  @media (max-width: 991px) {
+  // En tablet, centrar y limitar tamaño
+  @media (min-width: 577px) and (max-width: 991px) {
     max-width: 350px;
-    margin: 0 auto;
-    display: block;
+  }
+
+  // En móvil pequeño, asegurar que no se salga de la pantalla
+  @media (max-width: 576px) {
+    max-width: 100%;
+    width: 100%;
   }
 }
 
@@ -41,9 +47,13 @@
 // Detalles de la materia (fecha, profesor, estado)
 .materia-details {
   background-color: #f8f9fa;
-  padding: 1.25rem;
+  padding: 1rem;
   border-radius: 0.5rem;
   border-left: 4px solid #ffc800;
+
+  @media (min-width: 576px) {
+    padding: 1.25rem;
+  }
 
   .detail-item {
     display: flex;
@@ -83,10 +93,31 @@
 
   // Asegurar que el contenido del modal no cause scroll innecesario
   .modal-body {
-    padding: 2rem 1rem;
+    padding: 1rem 0.75rem;
+
+    @media (min-width: 576px) {
+      padding: 1.5rem 1rem;
+    }
 
     @media (min-width: 768px) {
+      padding: 2rem 1.5rem;
+    }
+
+    @media (min-width: 992px) {
       padding: 3rem 2rem;
+    }
+  }
+
+  // Eliminar padding extra de las columnas en móvil para evitar overflow
+  .row.align-items-start {
+    @media (max-width: 575px) {
+      margin-left: 0;
+      margin-right: 0;
+
+      > [class*="col-"] {
+        padding-left: 0;
+        padding-right: 0;
+      }
     }
   }
 }
