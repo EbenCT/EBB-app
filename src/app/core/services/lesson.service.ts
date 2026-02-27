@@ -8,6 +8,7 @@ import {
   setDoc,
   updateDoc,
   deleteDoc,
+  deleteField,
   query,
   where,
   getDocs,
@@ -92,6 +93,9 @@ export class LessonService {
       if (lessonData.urlYoutube) {
         newLesson.urlYoutube = lessonData.urlYoutube;
       }
+      if (lessonData.preguntaRetroalimentacion) {
+        newLesson.preguntaRetroalimentacion = lessonData.preguntaRetroalimentacion;
+      }
 
       await setDoc(lessonDocRef, newLesson);
 
@@ -115,7 +119,14 @@ export class LessonService {
   async updateLesson(lessonId: string, data: Partial<Leccion>): Promise<void> {
     try {
       const lessonDocRef = doc(this.firestore, `lecciones/${lessonId}`);
-      await updateDoc(lessonDocRef, data as any);
+
+      // Convertir valores null a deleteField() para eliminar campos de Firestore
+      const updateData: any = {};
+      for (const [key, value] of Object.entries(data)) {
+        updateData[key] = value === null ? deleteField() : value;
+      }
+
+      await updateDoc(lessonDocRef, updateData);
     } catch (error) {
       console.error('Error actualizando lección:', error);
       throw error;

@@ -386,13 +386,25 @@
 
           <!-- Pregunta de Retroalimentación (Opcional) -->
           <div class="border-top pt-3 mt-4">
-            <h6 class="mb-3">
-              <i class="fas fa-question-circle text-primary"></i>
-              Pregunta de Retroalimentación (Opcional)
-            </h6>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h6 class="mb-0">
+                <i class="fas fa-question-circle text-primary"></i>
+                Pregunta de Retroalimentación (Opcional)
+              </h6>
+              <span class="badge" [class.bg-success]="tienePreguntaRetroalimentacion(selectedLesson)" [class.bg-secondary]="!tienePreguntaRetroalimentacion(selectedLesson)">
+                <i class="fas" [class.fa-check-circle]="tienePreguntaRetroalimentacion(selectedLesson)" [class.fa-circle-xmark]="!tienePreguntaRetroalimentacion(selectedLesson)"></i>
+                {{ tienePreguntaRetroalimentacion(selectedLesson) ? 'Pregunta Guardada' : 'Sin Pregunta' }}
+              </span>
+            </div>
             <p class="text-muted small mb-3">
               Agrega una pregunta de 2 opciones que el estudiante deberá responder correctamente antes de completar la lección.
             </p>
+
+            <!-- Alerta informativa cuando ya existe una pregunta -->
+            <div class="alert alert-info d-flex align-items-center mb-3" *ngIf="tienePreguntaRetroalimentacion(selectedLesson)">
+              <i class="fas fa-info-circle me-2"></i>
+              <small>Esta lección ya tiene una pregunta de retroalimentación guardada. Puedes modificarla o dejar los campos vacíos para mantenerla sin cambios.</small>
+            </div>
 
             <div class="mb-3">
               <label class="form-label">Pregunta</label>
@@ -427,6 +439,13 @@
                   name="opcionIncorrectaEdit"
                   placeholder="Respuesta incorrecta">
               </div>
+            </div>
+
+            <!-- Botón para eliminar pregunta si existe -->
+            <div class="text-end" *ngIf="tienePreguntaRetroalimentacion(selectedLesson)">
+              <button type="button" class="btn btn-sm btn-outline-danger" (click)="eliminarPreguntaRetroalimentacion()">
+                <i class="fas fa-trash-alt"></i> Eliminar Pregunta
+              </button>
             </div>
           </div>
         </form>

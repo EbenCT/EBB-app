@@ -167,6 +167,31 @@ export class LeccionesComponent implements OnInit {
     this.showEditModal = true;
   }
 
+  /**
+   * Verificar si la lección tiene una pregunta de retroalimentación completa
+   */
+  tienePreguntaRetroalimentacion(leccion: Leccion | null): boolean {
+    if (!leccion || !leccion.preguntaRetroalimentacion) return false;
+    return !!(leccion.preguntaRetroalimentacion.texto &&
+              leccion.preguntaRetroalimentacion.opcionCorrecta &&
+              leccion.preguntaRetroalimentacion.opcionIncorrecta);
+  }
+
+  /**
+   * Eliminar pregunta de retroalimentación
+   */
+  eliminarPreguntaRetroalimentacion() {
+    if (!this.selectedLesson) return;
+
+    if (confirm('¿Estás seguro de eliminar la pregunta de retroalimentación? Esta acción no se puede deshacer.')) {
+      this.selectedLesson.preguntaRetroalimentacion = {
+        texto: '',
+        opcionCorrecta: '',
+        opcionIncorrecta: ''
+      };
+    }
+  }
+
   closeEditModal() {
     this.showEditModal = false;
     this.selectedLesson = null;
@@ -192,19 +217,23 @@ export class LeccionesComponent implements OnInit {
         }
       }
 
-      // Actualizar o eliminar pregunta de retroalimentación
+      // Actualizar pregunta de retroalimentación
       if (this.selectedLesson.preguntaRetroalimentacion?.texto &&
           this.selectedLesson.preguntaRetroalimentacion?.opcionCorrecta &&
           this.selectedLesson.preguntaRetroalimentacion?.opcionIncorrecta) {
+        // Guardar pregunta completa
         updateData.preguntaRetroalimentacion = {
           texto: this.selectedLesson.preguntaRetroalimentacion.texto,
           opcionCorrecta: this.selectedLesson.preguntaRetroalimentacion.opcionCorrecta,
           opcionIncorrecta: this.selectedLesson.preguntaRetroalimentacion.opcionIncorrecta
         };
-      } else {
-        // Si están vacíos, eliminar la pregunta
+      } else if (this.selectedLesson.preguntaRetroalimentacion?.texto === '' &&
+                 this.selectedLesson.preguntaRetroalimentacion?.opcionCorrecta === '' &&
+                 this.selectedLesson.preguntaRetroalimentacion?.opcionIncorrecta === '') {
+        // Si todos los campos están explícitamente vacíos, eliminar pregunta
         updateData.preguntaRetroalimentacion = null;
       }
+      // Si los campos están parcialmente llenos, no se actualiza para preservar el valor existente
 
       await this.lessonService.updateLesson(this.selectedLesson.id, updateData);
 
