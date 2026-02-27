@@ -676,9 +676,81 @@ export class CourseViewerComponent implements OnInit {
           seccionActual.progreso = progresoActualizado;
         }
       }
+
+      // Navegar automáticamente a la siguiente lección
+      this.navegarSiguienteLeccion(leccion);
     } catch (error) {
       console.error('Error completando lección:', error);
       alert('Hubo un error al marcar la lección como completada. Intenta nuevamente.');
+    }
+  }
+
+  /**
+   * Navegar automáticamente a la siguiente lección después de completar una
+   */
+  private navegarSiguienteLeccion(leccionCompletada: Leccion): void {
+    // Encontrar la sección actual de la lección completada
+    let seccionActualIndex = -1;
+    let leccionActualIndex = -1;
+
+    for (let i = 0; i < this.secciones.length; i++) {
+      const leccionIndex = this.secciones[i].lecciones.findIndex(l => l.id === leccionCompletada.id);
+      if (leccionIndex !== -1) {
+        seccionActualIndex = i;
+        leccionActualIndex = leccionIndex;
+        break;
+      }
+    }
+
+    // Si no se encontró la lección, no hacer nada
+    if (seccionActualIndex === -1) return;
+
+    const seccionActual = this.secciones[seccionActualIndex];
+    const leccionesEnSeccion = seccionActual.lecciones;
+
+    // Verificar si hay una siguiente lección en la misma sección
+    if (leccionActualIndex < leccionesEnSeccion.length - 1) {
+      // Hay más lecciones en esta sección
+      const siguienteLeccion = leccionesEnSeccion[leccionActualIndex + 1];
+      this.loadLeccion(seccionActual, siguienteLeccion);
+
+      // Expandir la sección si no está expandida
+      if (!seccionActual.expanded) {
+        seccionActual.expanded = true;
+      }
+      return;
+    }
+
+    // No hay más lecciones en esta sección, buscar la siguiente sección con lecciones
+    for (let i = seccionActualIndex + 1; i < this.secciones.length; i++) {
+      const siguienteSeccion = this.secciones[i];
+      if (siguienteSeccion.lecciones.length > 0) {
+        // Encontramos una sección con lecciones
+        const primeraLeccion = siguienteSeccion.lecciones[0];
+        this.loadLeccion(siguienteSeccion, primeraLeccion);
+
+        // Expandir la sección
+        if (!siguienteSeccion.expanded) {
+          siguienteSeccion.expanded = true;
+        }
+        return;
+      }
+    }
+
+    // Si llegamos aquí, era la última lección del curso
+    // Volver a la primera lección del curso
+    for (const seccion of this.secciones) {
+      if (seccion.lecciones.length > 0) {
+        const primeraLeccion = seccion.lecciones[0];
+        this.loadLeccion(seccion, primeraLeccion);
+
+        // Expandir la sección
+        if (!seccion.expanded) {
+          seccion.expanded = true;
+        }
+        alert('¡Has completado todas las lecciones del curso! Volviendo a la primera lección.');
+        return;
+      }
     }
   }
 
