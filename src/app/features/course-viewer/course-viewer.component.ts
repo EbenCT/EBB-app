@@ -252,8 +252,14 @@ export class CourseViewerComponent implements OnInit {
         this.currentUser.id,
         this.secciones
       );
-      alert(mensaje);
-      return;
+
+      if (mensaje) {
+        alert(mensaje);
+        return;
+      } else {
+        // Estaba bloqueada en la UI local, pero el progreso real ya la desbloqueó
+        seccion.progreso.bloqueada = false;
+      }
     }
     seccion.expanded = !seccion.expanded;
   }
@@ -270,8 +276,14 @@ export class CourseViewerComponent implements OnInit {
         this.currentUser.id,
         this.secciones
       );
-      alert(mensaje);
-      return;
+
+      if (mensaje) {
+        alert(mensaje);
+        return;
+      } else {
+        // Estaba bloqueada en la UI local, pero el progreso real ya la desbloqueó
+        seccion.progreso.bloqueada = false;
+      }
     }
 
     this.contenidoActual = {
@@ -291,8 +303,13 @@ export class CourseViewerComponent implements OnInit {
         this.currentUser.id,
         this.secciones
       );
-      alert(mensaje);
-      return;
+
+      if (mensaje) {
+        alert(mensaje);
+        return;
+      } else {
+        seccion.progreso.bloqueada = false;
+      }
     }
 
     this.contenidoActual = {
@@ -477,8 +494,13 @@ export class CourseViewerComponent implements OnInit {
         this.currentUser.id,
         this.secciones
       );
-      alert(mensaje);
-      return;
+
+      if (mensaje) {
+        alert(mensaje);
+        return;
+      } else {
+        seccion.progreso.bloqueada = false;
+      }
     }
 
     this.contenidoActual = {
@@ -664,17 +686,15 @@ export class CourseViewerComponent implements OnInit {
       if (this.curso?.id) {
         await this.progressUnlockService.invalidarCacheProgresoCurso(this.curso.id, this.currentUser.id);
 
-        // Recargar el progreso de la sección actual para actualizar el porcentaje en el sidebar
-        const seccionActual = this.secciones.find(s =>
-          s.lecciones.some(l => l.id === leccion.id)
+        // Recargar el progreso global para TODAS las secciones y así liberar bloqueos
+        const estadoSecciones = await this.progressUnlockService.getEstadoSeccionesCurso(
+          this.curso.id,
+          this.currentUser.id
         );
-        if (seccionActual) {
-          const progresoActualizado = await this.progressUnlockService.calcularProgresoSeccion(
-            seccionActual.id,
-            this.currentUser.id
-          );
-          seccionActual.progreso = progresoActualizado;
-        }
+
+        this.secciones.forEach(seccion => {
+          seccion.progreso = estadoSecciones.get(seccion.id);
+        });
       }
 
       // Navegar automáticamente a la siguiente lección

@@ -6,6 +6,7 @@ import { TaskService } from '../../core/services/task.service';
 import { AuthService } from '../../core/services/auth.service';
 import { LessonService } from '../../core/services/lesson.service';
 import { CloudinaryService } from '../../core/services/cloudinary.service';
+import { ProgressUnlockService } from '../../core/services/progress-unlock.service';
 import { Tarea, EntregaTarea } from '../../core/models/task.model';
 import { Leccion } from '../../core/models/lesson.model';
 
@@ -32,6 +33,7 @@ export class EntregarTareaComponent implements OnInit {
     private lessonService: LessonService,
     private authService: AuthService,
     private cloudinaryService: CloudinaryService,
+    private progressUnlockService: ProgressUnlockService,
     private router: Router,
     private route: ActivatedRoute
   ) {}
@@ -204,6 +206,15 @@ export class EntregarTareaComponent implements OnInit {
       }
 
       await this.taskService.submitTask(entregaData as EntregaTarea);
+
+      // Invalidar caché de progreso para que revalúe si desbloqueó la siguiente sección
+      if (this.cursoId && this.currentUser?.uid) {
+        await this.progressUnlockService.invalidarCacheProgresoCurso(
+          this.cursoId,
+          this.currentUser.uid
+        );
+      }
+
       alert('Tarea entregada exitosamente');
       this.goBack();
     } catch (error) {
