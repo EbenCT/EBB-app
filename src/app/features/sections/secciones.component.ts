@@ -35,6 +35,16 @@ export class SeccionesComponent implements OnInit {
     porcentajeMinimo: 70
   };
 
+  // ---- Importación desde JSON ----
+  showImportModal = false;
+  importJsonText = '';
+  importErrores: string[] = [];
+  importValidado = false;
+  importPreview: { titulo: string; descripcion: string; lecciones: string[] }[] = [];
+  importResumen: { totalSecciones: number; totalLecciones: number } | null = null;
+  importando = false;
+  importProgresoTexto = '';
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -227,8 +237,6 @@ export class SeccionesComponent implements OnInit {
   }
 
   get seccionesDisponiblesParaPrerequisitos(): Seccion[] {
-    // Para crear: todas las secciones existentes
-    // Para editar: todas excepto la actual y sus dependientes
     if (this.showEditModal && this.selectedSection) {
       return this.secciones.filter(s => s.id !== this.selectedSection!.id);
     }
@@ -238,5 +246,110 @@ export class SeccionesComponent implements OnInit {
   getSeccionTitulo(seccionId: string): string {
     const seccion = this.secciones.find(s => s.id === seccionId);
     return seccion ? `${seccion.orden + 1}. ${seccion.titulo}` : 'Desconocida';
+  }
+
+  // ==========================================================================
+  // IMPORTACIÓN DESDE JSON
+  // ==========================================================================
+
+  openImportModal() {
+    this.importJsonText = '';
+    this.importErrores = [];
+    this.importValidado = false;
+    this.importPreview = [];
+    this.importResumen = null;
+    this.importando = false;
+    this.importProgresoTexto = '';
+    this.showImportModal = true;
+  }
+
+  closeImportModal() {
+    if (this.importando) return; // no cerrar a mitad de una importación
+    this.showImportModal = false;
+  }
+
+  /**
+   * Carga el contenido de un archivo .json seleccionado y lo vuelca al textarea.
+   */
+  onImportFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.importJsonText = reader.result as string;
+      this.validarImportJson();
+    };
+    reader.readAsText(file);
+  }
+
+  /**
+   * Valida el JSON pegado y arma la previsualización del árbol. No toca Firestore.
+   */
+  validarImportJson() {
+    this.importValidado = false;
+    this.importPreview = [];
+    this.importResumen = null;
+
+    if (!this.importJsonText.trim()) {
+      this.importErrores = ['Pega el JSON o selecciona un archivo.'];
+      return;
+    }
+
+    const result = this.sectionService.validateImportJson(this.importJsonText);
+
+    if (!result.valido) {
+      this.importErrores = result.errores;
+      return;
+    }
+
+    this.importErrores = [];
+    this.importValidado = true;
+    this.importResumen = result.resumen!;
+
+    this.importPreview = result.data!.secciones.map(sec => ({
+      titulo: sec.titulo,
+      descripcion: sec.descripcion || '',
+      lecciones: sec.lecciones.map(l => l.titulo)
+    }));
+  }
+
+  /**
+   * Ejecuta la importación real contra Firestore.
+   */
+  async confirmarImportacion() {
+    if (!this.curso || !this.importValidado) return;
+
+    const result = this.sectionService.validateImportJson(this.importJsonText);
+    if (!result.valido || !result.data) {
+      this.importErrores = result.errores;
+      this.importValidado = false;
+      return;
+    }
+
+    this.importando = true;
+    this.importProgresoTexto = 'Iniciando importación...';
+
+    try {
+      const { seccionesCreadas, leccionesCreadas } =
+        await this.sectionService.importFromJson(
+          this.curso.id,
+          result.data,
+          (p) => {
+            this.importProgresoTexto =
+              `Creando sección ${p.seccionActual} de ${p.totalSecciones}: ${p.tituloSeccion}`;
+          }
+        );
+
+      this.importando = false;
+      this.showImportModal = false;
+      alert(`Importación completada: ${seccionesCreadas} secciones y ${leccionesCreadas} lecciones creadas.`);
+    } catch (error) {
+      console.error('Error importando:', error);
+      this.importando = false;
+      this.importProgresoTexto = '';
+      alert('Ocurrió un error durante la importación. Revisa la consola. Es posible que algunas secciones se hayan creado parcialmente.');
+    }
   }
 }

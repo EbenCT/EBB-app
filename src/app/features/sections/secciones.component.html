@@ -29,6 +29,9 @@
     <!-- Botón crear -->
     <div class="row mb-4">
       <div class="col-12 text-end">
+        <button class="btn btn-outline-primary me-2" (click)="openImportModal()">
+          <i class="fas fa-file-import"></i> Importar desde JSON
+        </button>
         <button class="btn btn-primary" (click)="openCreateModal()">
           <i class="fas fa-plus"></i> Nueva Sección
         </button>
@@ -311,3 +314,108 @@
   </div>
 </div>
 <div class="modal-backdrop fade" [class.show]="showEditModal" *ngIf="showEditModal"></div>
+
+<!-- Modal de Importar desde JSON -->
+<div class="modal fade" [class.show]="showImportModal" [style.display]="showImportModal ? 'block' : 'none'" *ngIf="showImportModal">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-file-import"></i> Importar secciones y lecciones</h5>
+        <button type="button" class="btn-close" (click)="closeImportModal()" [disabled]="importando"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <!-- Paso 1: entrada del JSON -->
+        <div *ngIf="!importando">
+          <label class="form-label">
+            Pega el JSON generado, o selecciona un archivo <code>.json</code>:
+          </label>
+
+          <input
+            type="file"
+            accept="application/json,.json"
+            class="form-control mb-2"
+            (change)="onImportFileSelected($event)"
+            [disabled]="importando">
+
+          <textarea
+            class="form-control"
+            style="font-family: 'Courier New', monospace; font-size: 0.85rem;"
+            rows="8"
+            placeholder='{ "version": "1.0", "secciones": [ ... ] }'
+            [(ngModel)]="importJsonText"
+            name="importJsonText"
+            (ngModelChange)="importValidado = false"
+            [disabled]="importando"></textarea>
+
+          <button
+            class="btn btn-secondary mt-2"
+            (click)="validarImportJson()"
+            [disabled]="importando">
+            <i class="fas fa-check-circle"></i> Validar y previsualizar
+          </button>
+        </div>
+
+        <!-- Errores de validación -->
+        <div class="alert alert-danger mt-3" *ngIf="importErrores.length > 0 && !importando">
+          <p class="fw-bold mb-1">
+            <i class="fas fa-exclamation-triangle"></i> Se encontraron problemas:
+          </p>
+          <ul class="mb-0">
+            <li *ngFor="let err of importErrores">{{ err }}</li>
+          </ul>
+        </div>
+
+        <!-- Paso 2: previsualización del árbol -->
+        <div *ngIf="importValidado && !importando">
+          <div class="alert alert-success mt-3 py-2">
+            <i class="fas fa-check"></i>
+            JSON válido: <strong>{{ importResumen?.totalSecciones }}</strong> secciones,
+            <strong>{{ importResumen?.totalLecciones }}</strong> lecciones.
+            Se agregarán al final de las secciones actuales del curso.
+          </div>
+
+          <div class="border rounded p-3" style="max-height: 320px; overflow-y: auto;">
+            <div class="mb-2 pb-2 border-bottom" *ngFor="let sec of importPreview; let i = index">
+              <div class="fw-bold">
+                <i class="fas fa-folder text-warning"></i> {{ i + 1 }}. {{ sec.titulo }}
+              </div>
+              <div class="text-muted small ms-4" *ngIf="sec.descripcion">
+                {{ sec.descripcion }}
+              </div>
+              <ul class="list-unstyled ms-4 mb-0 mt-1">
+                <li *ngFor="let lec of sec.lecciones" class="small">
+                  <i class="fas fa-file-alt text-primary"></i> {{ lec }}
+                </li>
+                <li *ngIf="sec.lecciones.length === 0" class="small text-muted">
+                  (sin lecciones)
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Importación en curso -->
+        <div class="text-center py-4" *ngIf="importando">
+          <div class="spinner-border text-primary" role="status"></div>
+          <p class="mt-2 mb-0">{{ importProgresoTexto }}</p>
+          <p class="text-muted small">No cierres esta ventana hasta que termine.</p>
+        </div>
+
+      </div>
+
+      <div class="modal-footer" *ngIf="!importando">
+        <button type="button" class="btn btn-secondary" (click)="closeImportModal()">Cancelar</button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="confirmarImportacion()"
+          [disabled]="!importValidado">
+          <i class="fas fa-cloud-upload-alt"></i> Importar al curso
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade" [class.show]="showImportModal" *ngIf="showImportModal"></div>
