@@ -154,6 +154,6 @@ export class ResultadoExamenComponent implements OnInit {
   }
 
   volver(): void {
-    this.location.back();
+    this.router.navigate(['/']);
   }
 }
