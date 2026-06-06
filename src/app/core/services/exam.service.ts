@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Firestore, collection, doc, setDoc, updateDoc, deleteDoc, getDocs, getDoc, query, where, orderBy, Timestamp, addDoc } from '@angular/fire/firestore';
+import { Auth } from '@angular/fire/auth';
 import { Examen, Pregunta, IntentoExamen, RespuestaEstudiante } from '../models/exam.model';
 import { ProgressUnlockService } from './progress-unlock.service';
 
@@ -12,6 +13,7 @@ export class ExamService {
 
   constructor(
     private firestore: Firestore,
+    private auth: Auth,
     private progressUnlockService: ProgressUnlockService
   ) {}
 
@@ -182,14 +184,59 @@ export class ExamService {
   }
 
   /**
+   * 🆕 Refrescar el token de autenticación de forma segura.
+   * En exámenes largos el token puede caducar; forzar el refresh
+   * antes de una escritura crítica evita rechazos de Firestore.
+   */
+  private async refreshAuthToken(): Promise<void> {
+    try {
+      const user = this.auth.currentUser;
+      if (user) {
+        await user.getIdToken(true);
+      }
+    } catch (e) {
+      // Si falla el refresh, dejamos que la escritura lo intente igual.
+      console.warn('No se pudo refrescar el token de auth:', e);
+    }
+  }
+
+  /**
+   * 🆕 Reintentar una operación con backoff exponencial.
+   * Cubre fallos transitorios de red móvil al enviar el examen.
+   */
+  private async retry<T>(fn: () => Promise<T>, intentos = 3, esperaMs = 800): Promise<T> {
+    let ultimoError: any;
+    for (let i = 0; i < intentos; i++) {
+      try {
+        return await fn();
+      } catch (error) {
+        ultimoError = error;
+        // Esperar antes de reintentar (backoff: 800ms, 1600ms, ...)
+        if (i < intentos - 1) {
+          await new Promise(res => setTimeout(res, esperaMs * (i + 1)));
+        }
+      }
+    }
+    throw ultimoError;
+  }
+
+  /**
    * Finalizar intento y calificar
+   *
+   * 🆕 CAMBIOS:
+   * - La comparación de opción múltiple ahora resuelve por id de forma
+   *   robusta y, si el id no se encuentra, cae a comparación por texto.
+   * - Se "congela" en cada respuesta el texto elegido y el texto correcto,
+   *   para que la pantalla de resultados no dependa de re-buscar por id
+   *   en el examen (inmune a colisiones o cambios posteriores del examen).
+   * - La escritura final se hace con refresh de token + reintentos.
    */
   async finishAttempt(intentoId: string, examen: Examen, respuestas: RespuestaEstudiante[]): Promise<number> {
     // Calificar respuestas
     let puntosObtenidos = 0;
     const totalPuntos = examen.preguntas.reduce((sum, p) => sum + p.puntos, 0);
 
-    const respuestasCalificadas = respuestas.map(respuesta => {
+    const respuestasCalificadas: RespuestaEstudiante[] = respuestas.map(respuesta => {
       const pregunta = examen.preguntas.find(p => p.id === respuesta.preguntaId);
       if (!pregunta) return respuesta;
 
@@ -199,6 +246,12 @@ export class ExamService {
       switch (pregunta.tipo) {
         case 'multiple_unica':
         case 'verdadero_falso':
+          esCorrecta = this.compararOpcionUnica(
+            respuesta.respuesta as string,
+            pregunta
+          );
+          break;
+
         case 'corta':
         case 'completar':
           esCorrecta = this.compararRespuestas(respuesta.respuesta, pregunta.respuestaCorrecta);
@@ -206,8 +259,9 @@ export class ExamService {
 
         case 'multiple_multiple':
           esCorrecta = this.compararRespuestasMultiples(
-            respuesta.respuesta as string[],
-            pregunta.respuestaCorrecta as string[]
+            (respuesta.respuesta as string[]) || [],
+            (pregunta.respuestaCorrecta as string[]) || [],
+            pregunta
           );
           break;
       }
@@ -217,27 +271,37 @@ export class ExamService {
         puntosObtenidos += puntos;
       }
 
+      // 🆕 Congelar textos legibles dentro de la propia respuesta del intento
+      const textoRespuesta = this.resolverTextoRespuesta(respuesta.respuesta, pregunta);
+      const textoCorrecto = this.resolverTextoCorrecto(pregunta);
+
       return {
         ...respuesta,
         esCorrecta,
-        puntosObtenidos: puntos
-      };
+        puntosObtenidos: puntos,
+        textoRespuesta,
+        textoCorrecto
+      } as RespuestaEstudiante;
     });
 
     // Calcular calificación sobre 100
     const calificacion = totalPuntos > 0 ? (puntosObtenidos / totalPuntos) * 100 : 0;
 
-    // Actualizar intento
-    await this.updateAttempt(intentoId, {
-      respuestas: respuestasCalificadas,
-      calificacion,
-      fechaFin: new Date(),
-      estado: 'finalizado'
-    });
+    // 🆕 Refrescar token antes de la escritura crítica
+    await this.refreshAuthToken();
 
-    // 🆕 ACTUALIZAR PROGRESO DEL ESTUDIANTE
+    // 🆕 Actualizar intento con reintentos ante fallos transitorios de red
+    await this.retry(() =>
+      this.updateAttempt(intentoId, {
+        respuestas: respuestasCalificadas,
+        calificacion,
+        fechaFin: new Date(),
+        estado: 'finalizado'
+      })
+    );
+
+    // 🆕 ACTUALIZAR PROGRESO DEL ESTUDIANTE (no crítico)
     try {
-      // Obtener datos del intento para sacar estudianteId y seccionId
       const intentoDoc = await getDoc(doc(this.firestore, 'intentos', intentoId));
       if (intentoDoc.exists()) {
         const intentoData = intentoDoc.data() as IntentoExamen;
@@ -257,25 +321,125 @@ export class ExamService {
   }
 
   /**
-   * Comparar respuestas simples
+   * 🆕 Comparar respuesta de opción única / verdadero-falso.
+   * Primero intenta por id. Si la opción elegida o la correcta no se
+   * resuelven por id (p. ej. colisión o id ausente), compara por texto.
+   */
+  private compararOpcionUnica(respuestaId: string, pregunta: Pregunta): boolean {
+    const correctaId = pregunta.respuestaCorrecta as string;
+
+    // Comparación directa por id (caso normal)
+    if (respuestaId && correctaId && respuestaId === correctaId) {
+      return true;
+    }
+
+    // Fallback robusto: comparar por texto de la opción
+    const opcionElegida = pregunta.opciones?.find(o => o.id === respuestaId);
+    const opcionCorrectaPorId = pregunta.opciones?.find(o => o.id === correctaId);
+    const opcionCorrectaPorFlag = pregunta.opciones?.find(o => o.esCorrecta === true);
+
+    const textoElegido = opcionElegida?.texto;
+    const textoCorrecto = (opcionCorrectaPorId || opcionCorrectaPorFlag)?.texto;
+
+    if (textoElegido && textoCorrecto) {
+      return this.normalizarTexto(textoElegido) === this.normalizarTexto(textoCorrecto);
+    }
+
+    return false;
+  }
+
+  /**
+   * Comparar respuestas simples (corta / completar)
    */
   private compararRespuestas(respuesta: string | string[], correcta: string | string[]): boolean {
     if (typeof respuesta === 'string' && typeof correcta === 'string') {
-      return respuesta.toLowerCase().trim() === correcta.toLowerCase().trim();
+      return this.normalizarTexto(respuesta) === this.normalizarTexto(correcta);
     }
     return false;
   }
 
   /**
-   * Comparar respuestas múltiples
+   * Comparar respuestas múltiples.
+   * 🆕 Intenta por ids y, si no cuadran por id, cae a comparación por texto.
    */
-  private compararRespuestasMultiples(respuestas: string[], correctas: string[]): boolean {
-    if (respuestas.length !== correctas.length) return false;
+  private compararRespuestasMultiples(respuestas: string[], correctas: string[], pregunta?: Pregunta): boolean {
+    // Comparación por id
+    if (respuestas.length === correctas.length) {
+      const respuestasOrdenadas = [...respuestas].sort();
+      const correctasOrdenadas = [...correctas].sort();
+      const coincidenIds = respuestasOrdenadas.every((r, i) => r === correctasOrdenadas[i]);
+      if (coincidenIds) return true;
+    }
 
-    const respuestasOrdenadas = [...respuestas].sort();
-    const correctasOrdenadas = [...correctas].sort();
+    // Fallback por texto
+    if (pregunta?.opciones) {
+      const textoElegidas = respuestas
+        .map(id => pregunta.opciones?.find(o => o.id === id)?.texto)
+        .filter((t): t is string => !!t)
+        .map(t => this.normalizarTexto(t))
+        .sort();
 
-    return respuestasOrdenadas.every((r, i) => r === correctasOrdenadas[i]);
+      const textoCorrectas = (pregunta.opciones || [])
+        .filter(o => correctas.includes(o.id) || o.esCorrecta === true)
+        .map(o => this.normalizarTexto(o.texto))
+        .sort();
+
+      if (
+        textoElegidas.length > 0 &&
+        textoElegidas.length === textoCorrectas.length &&
+        textoElegidas.every((t, i) => t === textoCorrectas[i])
+      ) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * 🆕 Normalizar texto para comparaciones tolerantes
+   * (acentos Unicode, mayúsculas, espacios internos/extremos).
+   */
+  private normalizarTexto(s: string): string {
+    return (s || '')
+      .normalize('NFC')
+      .toLowerCase()
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  /**
+   * 🆕 Resolver el texto legible de la respuesta del estudiante.
+   */
+  private resolverTextoRespuesta(respuesta: string | string[], pregunta: Pregunta): string {
+    if (Array.isArray(respuesta)) {
+      return respuesta
+        .map(id => pregunta.opciones?.find(o => o.id === id)?.texto || id)
+        .join(', ');
+    }
+    if (pregunta.opciones && pregunta.opciones.length > 0) {
+      const opcion = pregunta.opciones.find(o => o.id === respuesta);
+      return opcion?.texto || (respuesta as string) || 'Sin respuesta';
+    }
+    return (respuesta as string) || 'Sin respuesta';
+  }
+
+  /**
+   * 🆕 Resolver el texto legible de la respuesta correcta.
+   */
+  private resolverTextoCorrecto(pregunta: Pregunta): string {
+    const correcta = pregunta.respuestaCorrecta;
+    if (Array.isArray(correcta)) {
+      return correcta
+        .map(id => pregunta.opciones?.find(o => o.id === id)?.texto || id)
+        .join(', ');
+    }
+    if (pregunta.opciones && pregunta.opciones.length > 0) {
+      const opcion = pregunta.opciones.find(o => o.id === correcta)
+        || pregunta.opciones.find(o => o.esCorrecta === true);
+      return opcion?.texto || (correcta as string) || '';
+    }
+    return (correcta as string) || '';
   }
 
   /**
@@ -314,9 +478,51 @@ export class ExamService {
 
   /**
    * Generar ID único para pregunta
+   * 🆕 Usa crypto.randomUUID cuando está disponible para garantizar unicidad.
    */
   generateQuestionId(): string {
-    return `pregunta_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `pregunta_${this.uuid()}`;
+  }
+
+  /**
+   * 🆕 Generador de identificadores únicos robusto.
+   * Evita las colisiones de Math.random().toString(36).substr(2,9).
+   */
+  private uuid(): string {
+    const c: any = (globalThis as any)?.crypto;
+    if (c && typeof c.randomUUID === 'function') {
+      return c.randomUUID();
+    }
+    // Fallback: timestamp + dos segmentos aleatorios de longitud fija
+    const rnd = () => Math.random().toString(36).slice(2).padEnd(9, '0').slice(0, 9);
+    return `${Date.now().toString(36)}-${rnd()}-${rnd()}`;
+  }
+
+  /**
+   * 🆕 Registrar un error de examen en Firestore para diagnóstico.
+   * Útil porque los errores ocurren en el navegador del alumno y no
+   * aparecen en logs de servidor (Vercel).
+   */
+  async logExamError(payload: {
+    contexto: string;
+    examenId?: string;
+    intentoId?: string;
+    estudianteId?: string;
+    mensaje: string;
+    codigo?: string;
+  }): Promise<void> {
+    try {
+      const ref = collection(this.firestore, 'errores_examenes');
+      await addDoc(ref, {
+        ...payload,
+        online: typeof navigator !== 'undefined' ? navigator.onLine : null,
+        userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+        fecha: Timestamp.now()
+      });
+    } catch (e) {
+      // El logging nunca debe romper el flujo del usuario.
+      console.warn('No se pudo registrar el error de examen:', e);
+    }
   }
 
   /**

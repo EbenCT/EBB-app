@@ -81,6 +81,12 @@ export class ResultadoExamenComponent implements OnInit {
 
     if (!respuesta || !pregunta) return 'Sin respuesta';
 
+    // 🆕 Priorizar el texto congelado al calificar (intentos nuevos)
+    if (respuesta.textoRespuesta) {
+      return respuesta.textoRespuesta;
+    }
+
+    // Fallback por id (intentos antiguos sin texto congelado)
     if (Array.isArray(respuesta.respuesta)) {
       const opciones = respuesta.respuesta.map(id => {
         const opcion = pregunta.opciones?.find(o => o.id === id);
@@ -89,19 +95,25 @@ export class ResultadoExamenComponent implements OnInit {
       return opciones.join(', ');
     }
 
-    // Para respuestas de opción múltiple, buscar el texto
     if (pregunta.opciones) {
       const opcion = pregunta.opciones.find(o => o.id === respuesta.respuesta);
-      return opcion?.texto || respuesta.respuesta as string;
+      return opcion?.texto || (respuesta.respuesta as string) || 'Sin respuesta';
     }
 
-    return respuesta.respuesta as string;
+    return (respuesta.respuesta as string) || 'Sin respuesta';
   }
 
   getRespuestaCorrectaTexto(preguntaId: string): string {
+    const respuesta = this.intento?.respuestas.find(r => r.preguntaId === preguntaId);
     const pregunta = this.getPregunta(preguntaId);
     if (!pregunta) return '';
 
+    // 🆕 Priorizar el texto correcto congelado al calificar (intentos nuevos)
+    if (respuesta?.textoCorrecto) {
+      return respuesta.textoCorrecto;
+    }
+
+    // Fallback por id (intentos antiguos sin texto congelado)
     if (Array.isArray(pregunta.respuestaCorrecta)) {
       const opciones = pregunta.respuestaCorrecta.map(id => {
         const opcion = pregunta.opciones?.find(o => o.id === id);
@@ -110,10 +122,10 @@ export class ResultadoExamenComponent implements OnInit {
       return opciones.join(', ');
     }
 
-    // Para respuestas de opción múltiple, buscar el texto
     if (pregunta.opciones) {
-      const opcion = pregunta.opciones.find(o => o.id === pregunta.respuestaCorrecta);
-      return opcion?.texto || pregunta.respuestaCorrecta as string;
+      const opcion = pregunta.opciones.find(o => o.id === pregunta.respuestaCorrecta)
+        || pregunta.opciones.find(o => o.esCorrecta === true);
+      return opcion?.texto || (pregunta.respuestaCorrecta as string);
     }
 
     return pregunta.respuestaCorrecta as string;

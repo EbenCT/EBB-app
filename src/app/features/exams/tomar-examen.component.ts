@@ -53,7 +53,12 @@ export class TomarExamenComponent implements OnInit, OnDestroy {
     this.currentUserId = currentUser.uid;
 
     await this.loadExamen();
-    await this.verificarIntentosDisponibles();
+    // Si loadExamen redirigió por examen no disponible, no continuar
+    if (!this.examen) return;
+
+    const puedeContinuar = await this.verificarIntentosDisponibles();
+    if (!puedeContinuar) return;
+
     await this.iniciarIntento();
     this.initForm();
     this.startTimer();
@@ -97,23 +102,38 @@ export class TomarExamenComponent implements OnInit, OnDestroy {
     }
   }
 
-  async verificarIntentosDisponibles(): Promise<void> {
-    if (!this.examen) return;
+  /**
+   * 🆕 Devuelve true si el estudiante todavía puede rendir.
+   * Cuenta tanto intentos FINALIZADOS como TIEMPO_AGOTADO (intentos
+   * realmente consumidos). Los 'en_progreso' NO consumen intento: se
+   * reutilizan en iniciarIntento(), evitando registros fantasma.
+   */
+  async verificarIntentosDisponibles(): Promise<boolean> {
+    if (!this.examen) return false;
 
     const intentos = await this.examService.getAttemptsByStudentAndExam(
       this.currentUserId,
       this.examenId
     );
 
-    const intentosFinalizados = intentos.filter(i => i.estado === 'finalizado').length;
+    const intentosConsumidos = intentos.filter(
+      i => i.estado === 'finalizado' || i.estado === 'tiempo_agotado'
+    ).length;
 
-    if (intentosFinalizados >= this.examen.intentosPermitidos) {
+    if (intentosConsumidos >= this.examen.intentosPermitidos) {
       alert(`Has alcanzado el límite de ${this.examen.intentosPermitidos} intentos para este examen`);
       this.router.navigate(['/']);
-      return;
+      return false;
     }
+
+    return true;
   }
 
+  /**
+   * 🆕 Reutiliza un intento 'en_progreso' existente si lo hay, en lugar de
+   * crear siempre uno nuevo. Esto elimina el doble registro fantasma que
+   * aparecía al recargar la página o reconectar durante el examen.
+   */
   async iniciarIntento(): Promise<void> {
     if (!this.examen) return;
 
@@ -123,31 +143,55 @@ export class TomarExamenComponent implements OnInit, OnDestroy {
         this.examenId
       );
 
-      const numeroIntento = intentos.length + 1;
+      // ¿Hay un intento en progreso para reanudar?
+      const enProgreso = intentos.find(i => i.estado === 'en_progreso');
 
-      // Crear nuevo intento
-      const intentoData: Omit<IntentoExamen, 'id'> = {
-        examenId: this.examenId,
-        estudianteId: this.currentUserId,
-        numeroIntento,
-        fechaInicio: new Date(),
-        respuestas: [],
-        estado: 'en_progreso'
-      };
+      if (enProgreso) {
+        // Reanudar el intento existente (no se crea uno nuevo)
+        this.intento = enProgreso;
+      } else {
+        // Crear un nuevo intento solo si no hay ninguno en progreso
+        const intentosConsumidos = intentos.filter(
+          i => i.estado === 'finalizado' || i.estado === 'tiempo_agotado'
+        ).length;
+        const numeroIntento = intentosConsumidos + 1;
 
-      const intentoId = await this.examService.createAttempt(intentoData);
+        const intentoData: Omit<IntentoExamen, 'id'> = {
+          examenId: this.examenId,
+          estudianteId: this.currentUserId,
+          numeroIntento,
+          fechaInicio: new Date(),
+          respuestas: [],
+          estado: 'en_progreso'
+        };
 
-      this.intento = {
-        id: intentoId,
-        ...intentoData
-      };
+        const intentoId = await this.examService.createAttempt(intentoData);
 
-      // Calcular tiempo restante
-      this.tiempoRestante = this.examen.duracionMinutos * 60;
+        this.intento = {
+          id: intentoId,
+          ...intentoData
+        };
+      }
+
+      // Calcular tiempo restante en base a la fecha de inicio real del intento
+      const duracionSegundos = this.examen.duracionMinutos * 60;
+      const inicio = this.intento.fechaInicio instanceof Date
+        ? this.intento.fechaInicio
+        : new Date(this.intento.fechaInicio);
+      const transcurridos = Math.floor((Date.now() - inicio.getTime()) / 1000);
+      this.tiempoRestante = Math.max(0, duracionSegundos - transcurridos);
+
       this.loading = false;
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating attempt:', error);
+      await this.examService.logExamError({
+        contexto: 'iniciarIntento',
+        examenId: this.examenId,
+        estudianteId: this.currentUserId,
+        mensaje: error?.message || String(error),
+        codigo: error?.code
+      });
       alert('Error al iniciar el examen');
       this.router.navigate(['/']);
     }
@@ -168,6 +212,38 @@ export class TomarExamenComponent implements OnInit, OnDestroy {
     });
 
     this.respuestasForm = this.fb.group(controls);
+
+    // 🆕 Si reanudamos un intento, restaurar las respuestas ya guardadas
+    this.restaurarRespuestasGuardadas();
+  }
+
+  /**
+   * 🆕 Vuelca al formulario las respuestas previamente autoguardadas
+   * del intento en progreso (si las hubiera).
+   */
+  private restaurarRespuestasGuardadas(): void {
+    const previas = this.intento?.respuestas;
+    if (!previas || previas.length === 0) return;
+
+    previas.forEach(r => {
+      const pregunta = this.preguntasActuales.find(p => p.id === r.preguntaId);
+      if (!pregunta) return;
+
+      if (pregunta.tipo === 'multiple_multiple') {
+        const seleccionadas = Array.isArray(r.respuesta) ? r.respuesta : [];
+        pregunta.opciones?.forEach(opcion => {
+          const control = this.respuestasForm.get(`${pregunta.id}_${opcion.id}`);
+          if (control) {
+            control.setValue(seleccionadas.includes(opcion.id));
+          }
+        });
+      } else {
+        const control = this.respuestasForm.get(pregunta.id);
+        if (control && typeof r.respuesta === 'string') {
+          control.setValue(r.respuesta);
+        }
+      }
+    });
   }
 
   startTimer(): void {
@@ -295,7 +371,16 @@ export class TomarExamenComponent implements OnInit, OnDestroy {
 
       const respuestas = this.buildRespuestas();
 
-      // Finalizar y calificar
+      // 🆕 Guardar las respuestas ANTES de calificar, de modo que aunque
+      // falle el cierre, el trabajo del alumno no se pierda.
+      try {
+        await this.examService.updateAttempt(this.intento.id, { respuestas });
+      } catch (saveErr) {
+        // No abortamos: finishAttempt reintentará la escritura completa.
+        console.warn('No se pudo pre-guardar respuestas, se intentará al finalizar:', saveErr);
+      }
+
+      // Finalizar y calificar (con refresh de token + reintentos dentro del servicio)
       const calificacion = await this.examService.finishAttempt(
         this.intento.id,
         this.examen,
@@ -320,10 +405,32 @@ export class TomarExamenComponent implements OnInit, OnDestroy {
       // Redirigir a resultados
       this.router.navigate(['/examenes', this.examenId, 'resultados', this.intento.id]);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error submitting exam:', error);
-      alert('Error al enviar el examen');
+
+      // 🆕 Registrar el error real en Firestore para diagnóstico posterior
+      await this.examService.logExamError({
+        contexto: 'submitExam',
+        examenId: this.examenId,
+        intentoId: this.intento?.id,
+        estudianteId: this.currentUserId,
+        mensaje: error?.message || String(error),
+        codigo: error?.code
+      });
+
+      // 🆕 Mensaje más claro y reactivar el botón para reintentar sin recargar
+      const sinConexion = typeof navigator !== 'undefined' && navigator.onLine === false;
+      alert(
+        sinConexion
+          ? 'No se pudo enviar el examen por falta de conexión. Tus respuestas quedaron guardadas; revisa tu internet y vuelve a pulsar "Enviar Examen".'
+          : 'Error al enviar el examen. Tus respuestas quedaron guardadas; vuelve a pulsar "Enviar Examen" para reintentar.'
+      );
+
+      // Reactivar timer/autosave y botón para permitir un reintento limpio
       this.submitting = false;
+      if (!porTiempoAgotado) {
+        this.startAutoSave();
+      }
     }
   }
 

@@ -54,4 +54,9 @@ export interface RespuestaEstudiante {
   respuesta: string | string[];
   esCorrecta?: boolean;
   puntosObtenidos?: number;
+  // 🆕 Textos "congelados" al momento de calificar, para que la revisión
+  // del examen no dependa de volver a resolver por id contra el examen
+  // (inmune a colisiones de id o a cambios posteriores del examen).
+  textoRespuesta?: string;
+  textoCorrecto?: string;
 }
